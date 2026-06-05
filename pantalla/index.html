@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pantalla · El Partido de la Evidencia</title>
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+  body{overflow:hidden}
+  #stage{position:fixed;inset:0;display:flex;flex-direction:column}
+  /* scoreboard superior */
+  #scoreboard{display:flex;align-items:center;justify-content:space-between;gap:20px;
+    padding:18px 34px;border-bottom:1px solid var(--line);background:rgba(10,14,21,.7)}
+  #scoreboard .t{display:flex;align-items:center;gap:14px;font-weight:800;font-size:22px}
+  #scoreboard .e{font-size:30px}
+  #scoreboard .num{font-size:46px;font-weight:900;font-variant-numeric:tabular-nums}
+  #scoreboard .mid{text-align:center;color:var(--muted)}
+  #scoreboard .mid .vs{font-size:20px;font-weight:900;color:var(--text)}
+  #scoreboard .mid .caso{font-size:12px;letter-spacing:.16em;text-transform:uppercase}
+  #main{flex:1;position:relative;overflow:hidden}
+  .scene{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:34px 56px}
+  .big{font-size:84px;font-weight:900;letter-spacing:-.02em;line-height:1}
+  .casebox{max-width:1100px;width:100%;background:rgba(18,26,38,.86);border:1px solid var(--line);
+    border-radius:22px;padding:34px 40px;text-align:left}
+  .casebox .lbl{font-size:14px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:800}
+  .casebox .ctext{font-size:30px;line-height:1.35;margin:8px 0 22px}
+  .casebox .q{font-size:34px;font-weight:800;line-height:1.25}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:1100px;width:100%;margin-top:24px}
+  .opts .opt{font-size:22px;padding:20px;cursor:default}
+  .opts .opt .k{width:48px;height:48px;font-size:24px}
+  #timer{font-size:120px}
+  .countbar{margin-top:26px;font-size:24px;color:var(--muted)}
+  .msgkey{margin-top:22px;background:rgba(140,224,33,.12);border:1px solid rgba(140,224,33,.4);
+    border-radius:16px;padding:20px 28px;font-size:26px;font-weight:700;max-width:1100px}
+  .evid{max-width:1000px;text-align:left;background:rgba(18,26,38,.9);border:1px solid var(--line);
+    border-radius:22px;padding:34px 42px}
+  .evid h3{font-size:34px;margin:0 0 16px}
+  .evid li{font-size:24px;line-height:1.4;margin-bottom:12px}
+  #varAlarm{position:absolute;top:18px;left:50%;transform:translateX(-50%);
+    background:var(--red);color:#fff;font-weight:800;font-size:20px;padding:12px 24px;border-radius:999px}
+  #qr{background:#fff;padding:16px;border-radius:16px}
+  #reactions{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:50}
+  .rfly{position:absolute;font-size:54px;animation:floatUp 2.6s ease-out forwards}
+  .champ{font-size:30px}
+  #cfgnote{position:fixed;bottom:10px;left:0;right:0;text-align:center;color:var(--muted);font-size:12px}
+</style>
+</head><body>
+<div id="stage">
+  <div id="scoreboard">
+    <div class="t"><span class="e">⚡</span><span>Inicio Rápido</span><span class="num" id="sRapido" style="color:var(--teal)">0</span></div>
+    <div class="mid"><div class="caso" id="casoLbl">Esperando</div><div class="vs">VS</div></div>
+    <div class="t"><span class="num" id="sControl" style="color:var(--green)">0</span><span>Control Sostenido</span><span class="e">🛡️</span></div>
+  </div>
+  <div id="main"><div id="scene" class="scene"></div></div>
+</div>
+<div id="reactions"></div>
+<div id="cfgnote"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="../assets/firebase.js"></script>
+<script src="../assets/common.js"></script>
+<script src="../assets/cases.js"></script>
+<script>
+const scene = document.getElementById("scene");
+const casoLbl = document.getElementById("casoLbl");
+let STATE = { evento:{estado:"lobby",caso_actual:1}, equipos:{}, jugadores:{}, respuestas:{}, var_solicitudes:{} };
+let lastReactKey = null, timerInt = null;
+
+function casoActual(){ return CASOS.find(c => c.id === (STATE.evento.caso_actual||1)) || CASOS[0]; }
+function jugadoresPorEquipo(eq){ return Object.values(STATE.jugadores||{}).filter(j=>j.equipo===eq).length; }
+
+function pintarScore(){
+  const r = puntajeNormalizado((STATE.equipos.rapido||{}).puntaje||0, jugadoresPorEquipo("rapido"));
+  const c = puntajeNormalizado((STATE.equipos.control||{}).puntaje||0, jugadoresPorEquipo("control"));
+  document.getElementById("sRapido").textContent = r;
+  document.getElementById("sControl").textContent = c;
+  const e = STATE.evento.estado;
+  casoLbl.textContent = (e==="lobby"||e==="final") ? (e==="final"?"Marcador final":"Esperando jugadores")
+    : ("Caso " + (STATE.evento.caso_actual||1));
+}
+
+function nRespuestas(){
+  const r = (STATE.respuestas||{})[STATE.evento.caso_actual] || {};
+  return Object.keys(r).length;
+}
+function nConectados(){ return Object.values(STATE.jugadores||{}).filter(j=>j.conectado!==false).length; }
+
+function render(){
+  pintarScore();
+  const e = STATE.evento.estado || "lobby";
+  const c = casoActual();
+  if(timerInt){ clearInterval(timerInt); timerInt=null; }
+
+  if(e==="lobby"){
+    const mesaURL = location.origin + location.pathname.replace(/pantalla\/.*/,"mesa/");
+    scene.innerHTML = `<div class="tag">Escanea y únete al partido</div>
+      <h1 class="brand" style="font-size:64px;margin:8px 0 22px">El Partido <span class="kc">de la Evidencia</span></h1>
+      <div id="qr"></div>
+      <div style="margin-top:24px;font-size:26px" class="muted">
+        ⚡ Inicio Rápido <b style="color:var(--teal)">${jugadoresPorEquipo("rapido")}</b>
+        &nbsp;·&nbsp; 🛡️ Control Sostenido <b style="color:var(--green)">${jugadoresPorEquipo("control")}</b></div>
+      <div style="margin-top:6px;font-size:18px" class="muted">${nConectados()} médicos conectados</div>`;
+    if(typeof QRCode!=="undefined"){ new QRCode(document.getElementById("qr"), { text:mesaURL, width:260, height:260, colorDark:"#0a0e15", colorLight:"#ffffff" }); }
+    else { document.getElementById("qr").outerHTML = '<div class="muted" style="font-size:18px">'+escapeHTML(mesaURL)+'</div>'; }
+  }
+  else if(e==="cortinilla"){
+    scene.innerHTML = `<div class="tag">La evidencia entra a la cancha</div>
+      <div class="big pop">CASO ${STATE.evento.caso_actual}</div>
+      <div class="muted" style="font-size:26px;margin-top:14px">Prepárate…</div>`;
+  }
+  else if(e==="pregunta"){
+    scene.innerHTML = `<div class="casebox pop">
+        <div class="lbl">Caso clínico · ${STATE.evento.caso_actual}</div>
+        <div class="ctext">${escapeHTML(c.caso)}</div>
+        <div class="q">${escapeHTML(c.pregunta)}</div></div>
+      <div class="muted" style="font-size:22px;margin-top:22px">El ponente está leyendo el caso…</div>`;
+  }
+  else if(e==="opciones" || e==="responder" || e==="bloqueo" || e==="resultado"){
+    const showTimer = (e==="responder");
+    const reveal = (e==="resultado");
+    let html = "";
+    if(reveal){ html += `<div class="big pop" style="font-size:60px;color:var(--green)">⚽ ¡GOL!</div>`; }
+    else if(e==="bloqueo"){ html += `<div class="big pop" style="font-size:52px">¡Tiempo!</div>`; }
+    else { html += `<div class="q" style="font-size:30px;font-weight:800;max-width:1100px">${escapeHTML(c.pregunta)}</div>`; }
+    if(showTimer){ html += `<div id="timer" class="timer">--</div>`; }
+    html += `<div class="opts">` + ["A","B","C","D"].map(k=>{
+      const isCorrect = reveal && c.correcta===k;
+      return `<button class="opt" ${isCorrect?'data-correct="1"':''} ${reveal&&!isCorrect?'data-wrong="1"':''} disabled>
+        <span class="k ${k}">${k}</span><span>${escapeHTML(c.opciones[k])}</span></button>`;
+    }).join("") + `</div>`;
+    if(showTimer){ html += `<div class="countbar"><b id="cnt">0</b> de ${nConectados()} respondieron</div>`; }
+    if(reveal){ html += `<div class="msgkey pop">💊 ${escapeHTML(c.mensaje_clave)}</div>`; }
+    scene.innerHTML = html;
+    if(showTimer) startTimer();
+    if(reveal && Object.keys(STATE.var_solicitudes||{}).length){
+      const n = Object.keys(STATE.var_solicitudes).length;
+      const a = document.createElement("div"); a.id="varAlarm"; a.className="pulse";
+      a.textContent = `🚨 VAR solicitado por ${n}`; document.getElementById("main").appendChild(a);
+    }
+  }
+  else if(e==="var"){
+    const ev = c.evidencia||{titulo:"Evidencia",puntos:[]};
+    scene.innerHTML = `<div class="tag" style="color:var(--red)">VAR de la evidencia</div>
+      <div class="evid pop"><h3>${escapeHTML(ev.titulo)}</h3>
+        <ul>${ev.puntos.map(p=>`<li>${escapeHTML(p)}</li>`).join("")}</ul>
+        <div style="margin-top:18px;color:var(--green);font-weight:800;font-size:24px">✔ Validado por el profesor experto</div></div>`;
+  }
+  else if(e==="cierre"){
+    scene.innerHTML = `<div class="big pop" style="font-size:54px">Siguiente jugada…</div>`;
+  }
+  else if(e==="final"){
+    const r = puntajeNormalizado((STATE.equipos.rapido||{}).puntaje||0, jugadoresPorEquipo("rapido"));
+    const cc = puntajeNormalizado((STATE.equipos.control||{}).puntaje||0, jugadoresPorEquipo("control"));
+    const champ = r===cc ? "¡Empate!" : (r>cc ? "⚡ Inicio Rápido" : "🛡️ Control Sostenido");
+    scene.innerHTML = `<div class="tag">Marcador final</div>
+      <div class="big pop" style="font-size:64px">${champ}</div>
+      <div style="font-size:30px;margin-top:14px" class="muted">⚡ ${r} &nbsp;·&nbsp; 🛡️ ${cc}</div>
+      <div class="msgkey" style="margin-top:30px">🏆 Ki-CAB es la jugada ganadora en acidez, reflujo y gastritis leves/moderadas.</div>`;
+  }
+}
+
+function startTimer(){
+  const el = document.getElementById("timer");
+  const cntEl = document.getElementById("cnt");
+  function tick(){
+    const cron = STATE.evento.cronometro;
+    const s = segRestantes(cron);
+    if(el){ el.textContent = s; el.className = "timer" + (s<=5?" crit":(s<=10?" low":"")); }
+    if(cntEl) cntEl.textContent = nRespuestas();
+  }
+  tick();
+  timerInt = setInterval(tick, 250);
+}
+
+/* Reacciones flotantes */
+function floatReaction(emoji){
+  const r = document.getElementById("reactions");
+  const el = document.createElement("div"); el.className="rfly"; el.textContent=emoji;
+  el.style.left = (8 + Math.random()*84) + "%"; el.style.bottom = "8%";
+  r.appendChild(el); setTimeout(()=>el.remove(), 2700);
+}
+
+fbOnReady(()=>{
+  document.getElementById("cfgnote").textContent = "";
+  watchServerOffset(db);
+  db.ref("evento").on("value", s => { STATE.evento = s.val() || {estado:"lobby",caso_actual:1}; render(); });
+  db.ref("equipos").on("value", s => { STATE.equipos = s.val() || {}; render(); });
+  db.ref("jugadores").on("value", s => { STATE.jugadores = s.val() || {}; if(STATE.evento.estado!=="responder") render(); });
+  db.ref("respuestas").on("value", s => { STATE.respuestas = s.val() || {}; });
+  db.ref("var_solicitudes").on("value", s => { STATE.var_solicitudes = s.val() || {}; if(STATE.evento.estado==="resultado") render(); });
+  db.ref("reacciones").limitToLast(1).on("child_added", s => {
+    if(s.key===lastReactKey) return; lastReactKey=s.key;
+    const v = s.val(); if(v && v.emoji) floatReaction(v.emoji);
+  });
+});
+render();
+</script>
+</body></html>

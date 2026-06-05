@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>El Partido de la Evidencia · Médico</title>
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+  body{min-height:100vh}
+  #app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding:18px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .topbar .me{font-weight:700;font-size:14px}
+  .chip{font-size:12px;font-weight:800;padding:6px 12px;border-radius:999px}
+  .chip.rapido{background:rgba(25,195,214,.16);color:var(--teal)}
+  .chip.control{background:rgba(140,224,33,.16);color:var(--green)}
+  .body{flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px}
+  h2{font-size:24px;margin:0}
+  .field{width:100%;padding:15px;border-radius:13px;border:1px solid var(--line);background:var(--panel);
+    color:var(--text);font-size:17px;font-family:inherit}
+  .teamsel{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .teamsel button{padding:22px 12px;border-radius:16px;border:2px solid var(--line);background:var(--panel);
+    color:var(--text);font-family:inherit;font-weight:800;font-size:16px;cursor:pointer}
+  .teamsel button .e{font-size:34px;display:block;margin-bottom:6px}
+  .teamsel button[data-sel="1"]{border-color:var(--green);background:rgba(140,224,33,.10)}
+  .watch{text-align:center;color:var(--muted)}
+  .watch .em{font-size:64px}
+  #mtimer{font-size:64px;text-align:center}
+  .react{display:flex;gap:12px;justify-content:center;margin-top:10px}
+  .react button{font-size:30px;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    width:64px;height:64px;cursor:pointer}
+  .result-big{font-size:40px;text-align:center;font-weight:900}
+  .learn li{margin-bottom:14px}
+  .learn .ok{color:var(--green);font-weight:800}
+  #cfgnote{position:fixed;bottom:8px;left:0;right:0;text-align:center;color:var(--muted);font-size:11px}
+</style>
+</head><body>
+<div id="app">
+  <div class="topbar">
+    <div class="brand" style="font-size:15px">El Partido <span class="kc">de la Evidencia</span></div>
+    <div id="meChip"></div>
+  </div>
+  <div class="body" id="view"></div>
+</div>
+<div id="cfgnote"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="../assets/firebase.js"></script>
+<script src="../assets/common.js"></script>
+<script src="../assets/cases.js"></script>
+<script>
+const view = document.getElementById("view");
+const meChip = document.getElementById("meChip");
+let ME = { nombre:null, equipo:null, registrado:false };
+let EV = { estado:"lobby", caso_actual:1 };
+let miRespuesta = null, selTeam = null, timerInt=null, lastVibSec=null, ready=false;
+
+function casoActual(){ return CASOS.find(c=>c.id===(EV.caso_actual||1)) || CASOS[0]; }
+function chip(){
+  if(!ME.equipo){ meChip.innerHTML=""; return; }
+  const t = TEAMS[ME.equipo];
+  meChip.innerHTML = `<span class="chip ${ME.equipo}">${t.emoji} ${escapeHTML(ME.nombre||"")}</span>`;
+}
+
+/* ---------- Registro ---------- */
+function renderRegistro(){
+  view.innerHTML = `
+    <h2>Bienvenido a la cancha 🏟️</h2>
+    <p class="muted" style="margin:0">Pon tu nombre y elige tu equipo (puedes ir con tus amigos).</p>
+    <input id="nm" class="field" placeholder="Tu nombre o apodo" maxlength="22" autocomplete="off">
+    <div class="teamsel">
+      <button id="bR" onclick="pickTeam('rapido')"><span class="e">⚡</span>Inicio Rápido<br><small class="muted">Actuar desde el 1er momento</small></button>
+      <button id="bC" onclick="pickTeam('control')"><span class="e">🛡️</span>Control Sostenido<br><small class="muted">Mantener el control 24 h</small></button>
+    </div>
+    <button class="btn wide lg" id="entrar" disabled onclick="entrar()">Entrar al partido</button>`;
+  document.getElementById("nm").addEventListener("input", refreshEntrar);
+}
+function pickTeam(t){
+  selTeam = t;
+  document.getElementById("bR").dataset.sel = t==="rapido"?"1":"";
+  document.getElementById("bC").dataset.sel = t==="control"?"1":"";
+  refreshEntrar();
+}
+function refreshEntrar(){
+  const nm = (document.getElementById("nm")||{}).value || "";
+  document.getElementById("entrar").disabled = !(nm.trim().length>=2 && selTeam);
+}
+function entrar(){
+  const nm = document.getElementById("nm").value.trim();
+  ME.nombre = nm; ME.equipo = selTeam; ME.registrado = true;
+  if(ready){
+    const ref = db.ref("jugadores/"+window.MI_UID);
+    ref.set({ nombre:nm, equipo:selTeam, conectado:true });
+    ref.child("conectado").onDisconnect().set(false);
+  }
+  chip(); render();
+}
+
+/* ---------- Estados de juego ---------- */
+function watch(txt, em){
+  view.innerHTML = `<div class="watch"><div class="em">${em||"👀"}</div><h2>${txt}</h2></div>`;
+}
+function renderResponder(){
+  const c = casoActual();
+  view.innerHTML = `<div id="mtimer" class="timer">--</div>
+    <p class="muted" style="text-align:center;margin:0 0 4px">Toca tu respuesta · puedes cambiar hasta el silbato</p>
+    <div style="display:flex;flex-direction:column;gap:12px" id="optwrap">
+      ${["A","B","C","D"].map(k=>`<button class="opt" data-k="${k}" onclick="responder('${k}')">
+        <span class="k ${k}">${k}</span><span>${escapeHTML(c.opciones[k])}</span></button>`).join("")}
+    </div>`;
+  marcarSel();
+  startTimer();
+}
+function marcarSel(){
+  document.querySelectorAll("#optwrap .opt").forEach(b=>{
+    b.dataset.sel = (b.dataset.k===miRespuesta)?"1":"";
+  });
+}
+function responder(k){
+  if(EV.estado!=="responder") return;
+  const s = segRestantes(EV.cronometro);
+  if(s<=0) return;
+  miRespuesta = k; marcarSel();
+  if(ready) db.ref(`respuestas/${EV.caso_actual}/${window.MI_UID}`).set({ opcion:k, ts:serverNow(), nombre:ME.nombre, equipo:ME.equipo });
+  if(navigator.vibrate) navigator.vibrate(30);
+}
+function startTimer(){
+  const el = document.getElementById("mtimer");
+  function tick(){
+    const s = segRestantes(EV.cronometro);
+    if(el){ el.textContent=s; el.className="timer"+(s<=5?" crit":(s<=10?" low":"")); }
+    if(s<=5 && s>0 && navigator.vibrate && lastVibSec!==s){ lastVibSec=s; navigator.vibrate(70); }
+  }
+  tick(); if(timerInt) clearInterval(timerInt); timerInt=setInterval(tick,250);
+}
+function renderResultado(){
+  const c = casoActual();
+  const acerto = miRespuesta && miRespuesta===c.correcta;
+  const sinResp = !miRespuesta;
+  let html = `<div class="result-big" style="color:${acerto?'var(--green)':'var(--red)'}">${acerto?'✓ ¡Acertaste!':(sinResp?'⏱ Sin respuesta':'✗ Fallaste')}</div>
+    <p class="muted" style="text-align:center;margin:4px 0">Respuesta correcta: <b style="color:var(--green)">${c.correcta}</b></p>
+    <div class="react">
+      <button onclick="reaccion('👏')">👏</button>
+      <button onclick="reaccion('⚽')">⚽</button>
+      <button onclick="reaccion('🔥')">🔥</button></div>`;
+  if(!acerto){
+    html += `<button class="btn ghost wide" style="margin-top:14px" id="varbtn" onclick="pedirVar()">🤚 No estoy de acuerdo · Pedir VAR</button>`;
+  }
+  view.innerHTML = html;
+}
+function reaccion(em){ if(ready) db.ref("reacciones").push({ emoji:em, equipo:ME.equipo, ts:serverNow() }); }
+function pedirVar(){
+  if(ready) db.ref("var_solicitudes/"+window.MI_UID).set(ME.equipo);
+  const b=document.getElementById("varbtn"); if(b){ b.textContent="✔ VAR solicitado"; b.disabled=true; }
+}
+function renderFinal(){
+  view.innerHTML = `<h2>🏁 Resumen del partido</h2>
+    <p class="muted" style="margin:0">Tus aprendizajes para llevar:</p>
+    <ul class="learn">${CASOS.map(c=>`<li><b>Caso ${c.id}.</b> Correcta: <span class="ok">${c.correcta}) ${escapeHTML(c.opciones[c.correcta])}</span><br>
+       <span class="muted">💊 ${escapeHTML(c.mensaje_clave)}</span></li>`).join("")}</ul>
+    <p class="muted" style="text-align:center">Gracias por jugar · Ki-CAB</p>`;
+}
+
+function render(){
+  if(!ME.registrado){ renderRegistro(); return; }
+  chip();
+  switch(EV.estado){
+    case "lobby":      watch("Esperando a que inicie el partido…","⏳"); break;
+    case "cortinilla": watch("Caso "+EV.caso_actual,"⚽"); break;
+    case "pregunta":   watch("Mira la pantalla — el ponente lee el caso","👀"); break;
+    case "opciones":   watch("Prepárate para responder…","⏱"); break;
+    case "responder":  renderResponder(); break;
+    case "bloqueo":    watch(miRespuesta?"Respuesta enviada ✓":"No respondiste a tiempo","🔒"); break;
+    case "resultado":  renderResultado(); break;
+    case "var":        watch("Vamos al VAR — revisando la evidencia","🟥"); break;
+    case "cierre":     watch("Siguiente jugada…","➡️"); break;
+    case "final":      renderFinal(); break;
+    default:           watch("Conectando…","⏳");
+  }
+}
+
+fbOnReady(()=>{
+  ready=true; document.getElementById("cfgnote").textContent="";
+  watchServerOffset(db);
+  if(ME.registrado){
+    const ref=db.ref("jugadores/"+window.MI_UID);
+    ref.set({nombre:ME.nombre,equipo:ME.equipo,conectado:true});
+    ref.child("conectado").onDisconnect().set(false);
+  }
+  db.ref("evento").on("value", s=>{
+    const prev=EV.estado; EV=s.val()||{estado:"lobby",caso_actual:1};
+    if(EV.caso_actual!== (prev&&EV.caso_actual) ){}
+    if(EV.estado==="responder" && prev!=="responder"){ miRespuesta=null; lastVibSec=null; }
+    if(EV.estado==="cortinilla"){ miRespuesta=null; }
+    render();
+  });
+  // recupera mi respuesta si recargo a media pregunta
+  db.ref("evento/caso_actual").on("value", s=>{
+    const cid=s.val()||1;
+    db.ref(`respuestas/${cid}/${window.MI_UID}`).once("value").then(r=>{
+      if(r.exists()){ miRespuesta=r.val().opcion; if(EV.estado==="responder") marcarSel(); }
+    });
+  });
+});
+render();
+</script>
+</body></html>

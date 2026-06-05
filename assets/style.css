@@ -1,0 +1,70 @@
+/* El Partido de la Evidencia · estilos compartidos */
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800;900&display=swap');
+
+:root{
+  --bg:#0a0e15; --bg2:#0c1320; --panel:#121a26; --panel2:#0f1620; --line:#21303f;
+  --green:#8ce021; --green2:#5bb80f; --teal:#19c3d6; --text:#e8eef5;
+  --muted:#8ea0b3; --warn:#f2b53b; --red:#e8554d; --blue:#2f86eb;
+  --A:#21c17a; --B:#2f86eb; --C:#e8554d; --D:#f2b53b;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:
+    radial-gradient(1100px 520px at 70% -8%, rgba(25,195,214,.10), transparent 60%),
+    radial-gradient(900px 460px at 10% 0%, rgba(140,224,33,.10), transparent 60%),
+    var(--bg);
+  color:var(--text);
+  font-family:'Lexend',-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.hidden{display:none !important}
+.brand{font-weight:900;letter-spacing:-.01em}
+.brand .kc{color:var(--green)}
+.accent{color:var(--green)}
+.muted{color:var(--muted)}
+
+/* botones */
+.btn{font-family:inherit;font-weight:700;border:none;border-radius:14px;cursor:pointer;
+  padding:16px 22px;font-size:17px;color:#06121a;background:var(--green);transition:.12s;
+  box-shadow:0 6px 22px rgba(140,224,33,.22)}
+.btn:hover{filter:brightness(1.06)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line);box-shadow:none}
+.btn.teal{background:var(--teal)}
+.btn.wide{width:100%}
+.btn.lg{font-size:20px;padding:20px 26px}
+
+/* opciones A/B/C/D */
+.opt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+  background:var(--panel);border:2px solid var(--line);border-radius:14px;
+  padding:15px 16px;color:var(--text);font-size:16px;font-family:inherit;cursor:pointer;transition:.12s}
+.opt .k{flex:0 0 auto;width:38px;height:38px;border-radius:9px;display:grid;place-items:center;
+  font-weight:900;font-size:18px;color:#06121a}
+.opt .k.A{background:var(--A)} .opt .k.B{background:var(--B)}
+.opt .k.C{background:var(--C)} .opt .k.D{background:var(--D)}
+.opt[data-sel="1"]{border-color:var(--green);background:rgba(140,224,33,.10)}
+.opt[data-correct="1"]{border-color:var(--green);background:rgba(140,224,33,.16)}
+.opt[data-wrong="1"]{border-color:var(--red);opacity:.6}
+.opt:disabled{cursor:default}
+
+/* marcador / equipos */
+.score-team{display:flex;align-items:center;gap:14px}
+.score-num{font-weight:900;font-variant-numeric:tabular-nums;line-height:1}
+
+/* cronómetro */
+.timer{font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.timer.low{color:var(--warn)}
+.timer.crit{color:var(--red)}
+
+/* utilidades */
+.center{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.fill{position:fixed;inset:0}
+.pad{padding:20px}
+.tag{font-size:11px;text-transform:uppercase;letter-spacing:.12em;font-weight:800;color:var(--muted)}
+@keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.pop{animation:pop .35s ease}
+@keyframes floatUp{0%{transform:translateY(0) scale(1);opacity:.95}100%{transform:translateY(-260px) scale(1.5);opacity:0}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+.pulse{animation:pulse 1s infinite}
