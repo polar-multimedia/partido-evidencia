@@ -28,6 +28,13 @@
   details{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:13px}
   summary{cursor:pointer;color:var(--muted)}
   #cfgnote{text-align:center;color:var(--muted);font-size:11px}
+  #roster{display:flex;gap:10px;margin-top:2px}
+  #roster:empty{display:none}
+  .rostercol{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .rostercol .rh{font-weight:800;font-size:13px;margin-bottom:6px}
+  .rostercol ul{margin:0;padding-left:18px;font-size:13px}
+  .rostercol li{margin-bottom:3px}
+  .teal{color:var(--teal)} .green{color:var(--green)}
 </style>
 </head><body>
 <div id="app">
@@ -45,6 +52,8 @@
     <div class="stat"><div class="n" id="nRap" style="color:var(--teal)">0</div><div class="l">⚡ Rápido</div></div>
     <div class="stat"><div class="n" id="nCon" style="color:var(--green)">0</div><div class="l">🛡️ Control</div></div>
   </div>
+  <button class="btn ghost mini" id="rosterBtn" onclick="toggleRoster()">👥 Ver integrantes de los equipos</button>
+  <div id="roster"></div>
   <div id="varInfo"></div>
   <div class="actions" id="actions"></div>
   <div class="cfg">⏱ Duración por pregunta
@@ -122,6 +131,20 @@ function revelar(){
   });
 }
 
+let rosterOpen = false;
+function toggleRoster(){ rosterOpen = !rosterOpen; renderRoster(); }
+function renderRoster(){
+  const el = document.getElementById("roster"); if(!el) return;
+  const btn = document.getElementById("rosterBtn");
+  if(btn) btn.textContent = rosterOpen ? "👥 Ocultar integrantes" : "👥 Ver integrantes de los equipos";
+  if(!rosterOpen){ el.innerHTML = ""; return; }
+  const list = eq => Object.values(JUG).filter(j=>j.equipo===eq)
+    .map(j=>`<li>${escapeHTML(j.nombre||"—")}${j.conectado===false?' <span class="muted">(offline)</span>':''}</li>`).join("")
+    || '<li class="muted">Sin jugadores</li>';
+  el.innerHTML = `<div class="rostercol"><div class="rh teal">⚡ Inicio Rápido (${jugN('rapido')})</div><ul>${list('rapido')}</ul></div>`
+    + `<div class="rostercol"><div class="rh green">🛡️ Control Sostenido (${jugN('control')})</div><ul>${list('control')}</ul></div>`;
+}
+
 const ATRAS = {cortinilla:"lobby",pregunta:"cortinilla",opciones:"pregunta",responder:"opciones",
   bloqueo:"responder",resultado:"bloqueo","var":"resultado",cierre:"resultado",final:"resultado"};
 function atras(){ const p=ATRAS[EV.estado]; if(p) setEstado(p); }
@@ -188,7 +211,7 @@ fbOnReady(()=>{
   watchServerOffset(db);
   db.ref("evento").once("value").then(s=>{ if(!s.exists()) db.ref("evento").set({estado:"lobby",caso_actual:1}); });
   db.ref("evento").on("value", s=>{ EV=s.val()||{estado:"lobby",caso_actual:1}; render(); });
-  db.ref("jugadores").on("value", s=>{ JUG=s.val()||{}; render(); });
+  db.ref("jugadores").on("value", s=>{ JUG=s.val()||{}; render(); renderRoster(); });
   db.ref("var_solicitudes").on("value", s=>{ VARS=s.val()||{}; render(); });
 });
 render();

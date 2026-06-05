@@ -31,6 +31,19 @@
   .learn li{margin-bottom:14px}
   .learn .ok{color:var(--green);font-weight:800}
   #cfgnote{position:fixed;bottom:8px;left:0;right:0;text-align:center;color:var(--muted);font-size:11px}
+  .leave{background:none;border:1px solid var(--line);color:var(--muted);font-family:inherit;
+    font-size:12px;font-weight:700;padding:5px 11px;border-radius:999px;cursor:pointer;margin-left:8px}
+  .leave:hover{color:var(--red);border-color:var(--red)}
+  .step-lbl{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px}
+  .teamsel button{display:flex;flex-direction:column;align-items:center;gap:2px}
+  .teamsel button .tname{font-size:16px;font-weight:800;margin-top:4px}
+  .shield-wrap{display:flex;justify-content:center}
+  .shield-wrap img{width:78px;height:78px;object-fit:contain}
+  .shield-emoji{display:none;width:78px;height:78px;place-items:center;font-size:46px}
+  .mcase{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .mcase .lbl{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:800}
+  .mcase .ct{font-size:15px;line-height:1.42;margin:6px 0 10px;color:#d4dfeb}
+  .mcase .qq{font-size:18px;font-weight:800;line-height:1.3}
 </style>
 </head><body>
 <div id="app">
@@ -59,20 +72,43 @@ function casoActual(){ return CASOS.find(c=>c.id===(EV.caso_actual||1)) || CASOS
 function chip(){
   if(!ME.equipo){ meChip.innerHTML=""; return; }
   const t = TEAMS[ME.equipo];
-  meChip.innerHTML = `<span class="chip ${ME.equipo}">${t.emoji} ${escapeHTML(ME.nombre||"")}</span>`;
+  meChip.innerHTML = `<span class="chip ${ME.equipo}">${t.emoji} ${escapeHTML(ME.nombre||"")}</span>`
+    + `<button class="leave" onclick="salir()">Salir</button>`;
+}
+function salir(){
+  if(!confirm("¿Salir del equipo? Dejarás de contar en el marcador.")) return;
+  if(ready && window.MI_UID){
+    const ref = db.ref("jugadores/"+window.MI_UID);
+    ref.child("conectado").onDisconnect().cancel();
+    ref.remove();
+  }
+  ME = { nombre:null, equipo:null, registrado:false };
+  selTeam = null; miRespuesta = null;
+  render();
 }
 
 /* ---------- Registro ---------- */
 function renderRegistro(){
   view.innerHTML = `
-    <h2>Bienvenido a la cancha 🏟️</h2>
-    <p class="muted" style="margin:0">Pon tu nombre y elige tu equipo (puedes ir con tus amigos).</p>
-    <input id="nm" class="field" placeholder="Tu nombre o apodo" maxlength="22" autocomplete="off">
-    <div class="teamsel">
-      <button id="bR" onclick="pickTeam('rapido')"><span class="e">⚡</span>Inicio Rápido<br><small class="muted">Actuar desde el 1er momento</small></button>
-      <button id="bC" onclick="pickTeam('control')"><span class="e">🛡️</span>Control Sostenido<br><small class="muted">Mantener el control 24 h</small></button>
+    <h2 style="text-align:center;margin-bottom:2px">🏟️ Bienvenido a la cancha</h2>
+    <div>
+      <div class="step-lbl">1 · Tu nombre</div>
+      <input id="nm" class="field" placeholder="Nombre o apodo" maxlength="22" autocomplete="off">
     </div>
-    <button class="btn wide lg" id="entrar" disabled onclick="entrar()">Entrar al partido</button>`;
+    <div>
+      <div class="step-lbl">2 · Elige tu equipo <span class="muted" style="font-weight:500;text-transform:none;letter-spacing:0">(puedes ir con tus amigos)</span></div>
+      <div class="teamsel">
+        <button id="bR" onclick="pickTeam('rapido')">
+          <div class="shield-wrap"><img src="../assets/escudo-rapido.png" alt="Inicio Rápido"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><div class="shield-emoji">⚡</div></div>
+          <div class="tname">Inicio Rápido</div><small class="muted">Actuar desde el 1er momento</small></button>
+        <button id="bC" onclick="pickTeam('control')">
+          <div class="shield-wrap"><img src="../assets/escudo-control.png" alt="Control Sostenido"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><div class="shield-emoji">🛡️</div></div>
+          <div class="tname">Control Sostenido</div><small class="muted">Mantener el control 24 h</small></button>
+      </div>
+    </div>
+    <button class="btn wide lg" id="entrar" disabled onclick="entrar()">Entrar al partido →</button>`;
   document.getElementById("nm").addEventListener("input", refreshEntrar);
 }
 function pickTeam(t){
@@ -100,9 +136,27 @@ function entrar(){
 function watch(txt, em){
   view.innerHTML = `<div class="watch"><div class="em">${em||"👀"}</div><h2>${txt}</h2></div>`;
 }
+/* Lectura sincronizada: el médico lee el caso/opciones en su celular igual que en la pantalla */
+function renderLectura(showOpts){
+  const c = casoActual();
+  let html = `<div class="mcase"><div class="lbl">Caso ${EV.caso_actual}</div>
+      <div class="ct">${escapeHTML(c.caso)}</div>
+      <div class="qq">${escapeHTML(c.pregunta)}</div></div>`;
+  if(showOpts){
+    html += `<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">`
+      + ["A","B","C","D"].map(k=>`<button class="opt" disabled>
+          <span class="k ${k}">${k}</span><span>${escapeHTML(c.opciones[k])}</span></button>`).join("")
+      + `</div><p class="muted" style="text-align:center;margin-top:10px">Prepárate… podrás responder en unos segundos</p>`;
+  } else {
+    html += `<p class="muted" style="text-align:center;margin-top:12px">👀 Lee el caso — también está en la pantalla</p>`;
+  }
+  view.innerHTML = html;
+}
 function renderResponder(){
   const c = casoActual();
-  view.innerHTML = `<div id="mtimer" class="timer">--</div>
+  view.innerHTML = `
+    <div class="mcase"><div class="qq">${escapeHTML(c.pregunta)}</div></div>
+    <div id="mtimer" class="timer">--</div>
     <p class="muted" style="text-align:center;margin:0 0 4px">Toca tu respuesta · puedes cambiar hasta el silbato</p>
     <div style="display:flex;flex-direction:column;gap:12px" id="optwrap">
       ${["A","B","C","D"].map(k=>`<button class="opt" data-k="${k}" onclick="responder('${k}')">
@@ -167,8 +221,8 @@ function render(){
   switch(EV.estado){
     case "lobby":      watch("Esperando a que inicie el partido…","⏳"); break;
     case "cortinilla": watch("Caso "+EV.caso_actual,"⚽"); break;
-    case "pregunta":   watch("Mira la pantalla — el ponente lee el caso","👀"); break;
-    case "opciones":   watch("Prepárate para responder…","⏱"); break;
+    case "pregunta":   renderLectura(false); break;
+    case "opciones":   renderLectura(true); break;
     case "responder":  renderResponder(); break;
     case "bloqueo":    watch(miRespuesta?"Respuesta enviada ✓":"No respondiste a tiempo","🔒"); break;
     case "resultado":  renderResultado(); break;
