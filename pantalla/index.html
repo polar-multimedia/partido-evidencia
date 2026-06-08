@@ -16,6 +16,7 @@
     padding:18px 34px;border-bottom:1px solid var(--line);background:rgba(10,14,21,.7)}
   #scoreboard .t{display:flex;align-items:center;gap:14px;font-weight:800;font-size:22px}
   #scoreboard .e{font-size:30px}
+  .teamlogo{height:62px;width:auto;max-width:130px;object-fit:contain;border-radius:8px;display:block;background:#000}
   #scoreboard .num{font-size:46px;font-weight:900;font-variant-numeric:tabular-nums}
   #scoreboard .mid{text-align:center;color:var(--muted)}
   #scoreboard .mid .vs{font-size:20px;font-weight:900;color:var(--text)}
@@ -43,6 +44,16 @@
   #varAlarm{position:absolute;top:18px;left:50%;transform:translateX(-50%);
     background:var(--red);color:#fff;font-weight:800;font-size:20px;padding:12px 24px;border-radius:999px}
   #qr{background:#fff;padding:16px;border-radius:16px}
+  .qrslot{min-height:300px;display:flex;align-items:center;justify-content:center;margin:6px 0}
+  .lobbybanner{display:flex;align-items:center;justify-content:center;gap:34px;background:#000;
+    border:1px solid var(--line);border-radius:20px;padding:18px 44px}
+  .lb-team{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .lb-logo{height:104px;width:auto;max-width:280px;object-fit:contain;background:#000}
+  .lb-name{font-size:22px;font-weight:800}
+  .lb-name b{font-weight:900;font-size:26px}
+  .lb-vs{font-size:34px;font-weight:900;color:#fff;background:linear-gradient(135deg,#27398D,#19c3d6);
+    width:70px;height:70px;border-radius:50%;display:grid;place-items:center;border:2px solid rgba(255,255,255,.18);
+    box-shadow:0 6px 18px rgba(0,0,0,.5);flex:0 0 auto}
   #reactions{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:50}
   .rfly{position:absolute;font-size:54px;animation:floatUp 2.6s ease-out forwards}
   .champ{font-size:30px}
@@ -54,9 +65,9 @@
 <div id="bgveil"></div>
 <div id="stage">
   <div id="scoreboard">
-    <div class="t"><span class="e">⚡</span><span>Inicio Rápido</span><span class="num" id="sRapido" style="color:var(--teal)">0</span></div>
+    <div class="t"><video class="teamlogo" src="../assets/escudo_inicio_rapido.mp4" poster="../assets/escudo_inicio_rapido.png" autoplay loop muted playsinline></video><span>Inicio Rápido</span><span class="num" id="sRapido" style="color:var(--teal)">0</span></div>
     <div class="mid"><div class="caso" id="casoLbl">Esperando</div><div class="vs">VS</div></div>
-    <div class="t"><span class="num" id="sControl" style="color:var(--green)">0</span><span>Control Sostenido</span><span class="e">🛡️</span></div>
+    <div class="t"><span class="num" id="sControl" style="color:var(--green)">0</span><span>Control Sostenido</span><video class="teamlogo" src="../assets/escudo_control_sostenido.mp4" poster="../assets/escudo_control_sostenido.png" autoplay loop muted playsinline></video></div>
   </div>
   <div id="main"><div id="scene" class="scene"></div></div>
 </div>
@@ -104,16 +115,28 @@ function render(){
   if(timerInt){ clearInterval(timerInt); timerInt=null; }
 
   if(e==="lobby"){
+    const showQR = !!STATE.evento.mostrar_qr;
     const mesaURL = location.origin + location.pathname.replace(/pantalla\/.*/,"mesa/");
-    scene.innerHTML = `<div class="tag">Escanea y únete al partido</div>
-      <h1 class="brand" style="font-size:64px;margin:8px 0 22px">El Partido <span class="kc">de la Evidencia</span></h1>
-      <div id="qr"></div>
-      <div style="margin-top:24px;font-size:26px" class="muted">
-        ⚡ Inicio Rápido <b style="color:var(--teal)">${jugadoresPorEquipo("rapido")}</b>
-        &nbsp;·&nbsp; 🛡️ Control Sostenido <b style="color:var(--green)">${jugadoresPorEquipo("control")}</b></div>
-      <div style="margin-top:6px;font-size:18px" class="muted">${nConectados()} médicos conectados</div>`;
-    if(typeof QRCode!=="undefined"){ new QRCode(document.getElementById("qr"), { text:mesaURL, width:260, height:260, colorDark:"#0a0e15", colorLight:"#ffffff" }); }
-    else { document.getElementById("qr").outerHTML = '<div class="muted" style="font-size:18px">'+escapeHTML(mesaURL)+'</div>'; }
+    scene.innerHTML = `
+      <div class="lobbybanner" style="margin-top:-20px">
+        <div class="lb-team">
+          <video class="lb-logo" src="../assets/escudo_inicio_rapido.mp4" poster="../assets/escudo_inicio_rapido.png" autoplay loop muted playsinline></video>
+          <div class="lb-name" style="color:var(--teal)">Inicio Rápido <b>${jugadoresPorEquipo("rapido")}</b></div>
+        </div>
+        <div class="lb-vs">VS</div>
+        <div class="lb-team">
+          <video class="lb-logo" src="../assets/escudo_control_sostenido.mp4" poster="../assets/escudo_control_sostenido.png" autoplay loop muted playsinline></video>
+          <div class="lb-name" style="color:var(--green)">Control Sostenido <b>${jugadoresPorEquipo("control")}</b></div>
+        </div>
+      </div>
+      <div class="qrslot">${showQR ? '<div id="qr"></div>' : ''}</div>
+      <div class="tag">${showQR?"Escanea y únete al partido":"La evidencia entra a la cancha"}</div>
+      <h1 class="brand" style="font-size:64px;margin:6px 0 0">El Partido <span class="kc">de la Evidencia</span></h1>
+      <div style="margin-top:10px;font-size:18px" class="muted">${nConectados()} médicos conectados</div>`;
+    if(showQR){
+      if(typeof QRCode!=="undefined"){ new QRCode(document.getElementById("qr"), { text:mesaURL, width:260, height:260, colorDark:"#0a0e15", colorLight:"#ffffff" }); }
+      else { const q=document.getElementById("qr"); if(q) q.outerHTML = '<div class="muted" style="font-size:18px">'+escapeHTML(mesaURL)+'</div>'; }
+    }
   }
   else if(e==="cortinilla"){
     scene.innerHTML = `<div class="tag">La evidencia entra a la cancha</div>

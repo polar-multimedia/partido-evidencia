@@ -191,7 +191,11 @@ function render(){
   function add(label, fn, cls){ const b=document.createElement("button");
     b.className="btn lg wide"+(cls?(" "+cls):""); b.textContent=label; b.onclick=fn; a.appendChild(b); }
   switch(EV.estado){
-    case "lobby":      add("▶️ Iniciar partido", ()=>setEstado("cortinilla")); break;
+    case "lobby":
+      add("▶️ Iniciar partido", ()=>setEstado("cortinilla"));
+      add(EV.mostrar_qr?"🙈 Ocultar QR en pantalla":"📲 Mostrar QR en pantalla",
+          ()=>db.ref("evento/mostrar_qr").set(!EV.mostrar_qr), "ghost");
+      break;
     case "cortinilla": add("Mostrar el caso →", ()=>setEstado("pregunta")); break;
     case "pregunta":   add("Mostrar opciones →", ()=>setEstado("opciones")); break;
     case "opciones":   add("Abrir respuestas ⏱", abrirRespuestas, "teal"); break;
