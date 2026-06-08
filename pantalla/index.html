@@ -5,7 +5,11 @@
 <title>Pantalla · El Partido de la Evidencia</title>
 <link rel="stylesheet" href="../assets/style.css">
 <style>
-  body{overflow:hidden}
+  html{background:#0a0e15}
+  body{overflow:hidden;background:transparent}
+  #bgloop{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;opacity:0;transition:opacity .9s ease}
+  #bgveil{position:fixed;inset:0;z-index:-1;background:linear-gradient(rgba(8,11,17,.50),rgba(8,11,17,.74));opacity:0;transition:opacity .9s ease}
+  body.bgon #bgloop, body.bgon #bgveil{opacity:1}
   #stage{position:fixed;inset:0;display:flex;flex-direction:column}
   /* scoreboard superior */
   #scoreboard{display:flex;align-items:center;justify-content:space-between;gap:20px;
@@ -45,6 +49,9 @@
   #cfgnote{position:fixed;bottom:10px;left:0;right:0;text-align:center;color:var(--muted);font-size:12px}
 </style>
 </head><body>
+<video id="bgloop" loop muted autoplay playsinline preload="auto" poster="../assets/loop_poster.jpg">
+  <source src="../assets/loop.mp4" type="video/mp4"></video>
+<div id="bgveil"></div>
 <div id="stage">
   <div id="scoreboard">
     <div class="t"><span class="e">⚡</span><span>Inicio Rápido</span><span class="num" id="sRapido" style="color:var(--teal)">0</span></div>
@@ -88,9 +95,11 @@ function nRespuestas(){
 }
 function nConectados(){ return Object.values(STATE.jugadores||{}).filter(j=>j.conectado!==false).length; }
 
+const IDLE_STATES = ["lobby","cortinilla","cierre","final"];
 function render(){
   pintarScore();
   const e = STATE.evento.estado || "lobby";
+  document.body.classList.toggle("bgon", IDLE_STATES.includes(e));
   const c = casoActual();
   if(timerInt){ clearInterval(timerInt); timerInt=null; }
 
