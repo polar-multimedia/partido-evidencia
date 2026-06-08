@@ -10,6 +10,11 @@
   #bgloop{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;opacity:0;transition:opacity .9s ease}
   #bgveil{position:fixed;inset:0;z-index:-1;background:linear-gradient(rgba(8,11,17,.50),rgba(8,11,17,.74));opacity:0;transition:opacity .9s ease}
   body.bgon #bgloop, body.bgon #bgveil{opacity:1}
+  #cortvid{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;background:#000;z-index:40;opacity:0;pointer-events:none;transition:opacity .4s}
+  #cortvid.show{opacity:1}
+  #prep{position:fixed;inset:0;z-index:60;background:#0a0e15;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:30px}
+  #prep .pbar{width:360px;max-width:80vw;height:10px;border-radius:999px;background:#1b2433;overflow:hidden}
+  #prep .pfill{height:100%;width:0;background:var(--green);transition:width .2s}
   #stage{position:fixed;inset:0;display:flex;flex-direction:column}
   /* scoreboard superior */
   #scoreboard{display:flex;align-items:center;justify-content:space-between;gap:20px;
@@ -63,6 +68,7 @@
 <video id="bgloop" loop muted autoplay playsinline preload="auto" poster="../assets/loop_poster.jpg">
   <source src="../assets/loop.mp4" type="video/mp4"></video>
 <div id="bgveil"></div>
+<video id="cortvid" playsinline preload="auto"></video>
 <div id="stage">
   <div id="scoreboard">
     <div class="t"><video class="teamlogo" src="../assets/escudo_inicio_rapido.mp4" poster="../assets/escudo_inicio_rapido.png" autoplay loop muted playsinline></video><span>Inicio Rápido</span><span class="num" id="sRapido" style="color:var(--teal)">0</span></div>
@@ -73,6 +79,16 @@
 </div>
 <div id="reactions"></div>
 <div id="cfgnote"></div>
+
+<div id="prep">
+  <div class="tag">El Partido de la Evidencia · Pantalla</div>
+  <h1 class="brand" style="font-size:46px;margin:0">Preparar <span class="kc">pantalla</span></h1>
+  <p class="muted" style="max-width:540px;font-size:18px;margin:0">Haz clic una vez antes de iniciar el evento: activa el audio y precarga las cortinillas para que corran sin internet durante el show.</p>
+  <button class="btn lg" id="prepBtn" onclick="prepStart()">▶ Preparar pantalla</button>
+  <div class="pbar hidden" id="pbar"><div class="pfill" id="pfill"></div></div>
+  <div class="muted" id="pmsg" style="font-size:14px;min-height:18px"></div>
+  <button class="btn ghost" onclick="prepSkip()" style="font-size:13px;padding:8px 14px">Saltar (sin precargar)</button>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -86,6 +102,55 @@ const scene = document.getElementById("scene");
 const casoLbl = document.getElementById("casoLbl");
 let STATE = { evento:{estado:"lobby",caso_actual:1}, equipos:{}, jugadores:{}, respuestas:{}, var_solicitudes:{} };
 let lastReactKey = null, timerInt = null;
+
+/* ---- Cortinillas de video (precarga + audio) ---- */
+const CORT = { "cortinilla1":"../assets/cortinilla1.mp4" };  // momento -> archivo
+const CORT_URLS = {};   // momento -> blob URL tras precargar
+let PREPARED = false;
+const cortvid = document.getElementById("cortvid");
+const bgloop  = document.getElementById("bgloop");
+cortvid.addEventListener("error", ()=>cortvid.classList.remove("show"));  // si falla, cae a cortinilla CSS
+cortvid.addEventListener("ended", ()=>{ /* mantiene último cuadro hasta que el operador avance */ });
+
+function prepStart(){
+  unlockAudio();
+  document.getElementById("prepBtn").disabled = true;
+  document.getElementById("pbar").classList.remove("hidden");
+  preloadAll().finally(finishPrep);
+}
+function prepSkip(){ unlockAudio(); finishPrep(); }
+function finishPrep(){ PREPARED = true; document.getElementById("prep").classList.add("hidden"); }
+function unlockAudio(){
+  try{
+    cortvid.src = CORT["cortinilla1"]; cortvid.muted = false;
+    cortvid.play().then(()=>{ cortvid.pause(); cortvid.currentTime = 0; }).catch(()=>{});
+  }catch(e){}
+  if(bgloop && bgloop.play) bgloop.play().catch(()=>{});
+}
+async function preloadAll(){
+  const keys = Object.keys(CORT), fill=document.getElementById("pfill"), msg=document.getElementById("pmsg");
+  for(let i=0;i<keys.length;i++){
+    try{
+      const res = await fetch(CORT[keys[i]]);
+      const total = +(res.headers.get("Content-Length")||0);
+      const reader = res.body.getReader(); let rec=0; const chunks=[];
+      while(true){ const {done,value}=await reader.read(); if(done) break; chunks.push(value); rec+=value.length;
+        const p = total? rec/total : 0; fill.style.width = Math.round(((i+p)/keys.length)*100)+"%";
+        msg.textContent = "Precargando "+(i+1)+"/"+keys.length+" · "+Math.round(rec/1048576)+" MB"; }
+      CORT_URLS[keys[i]] = URL.createObjectURL(new Blob(chunks,{type:"video/mp4"}));
+      fill.style.width = Math.round(((i+1)/keys.length)*100)+"%";
+    }catch(e){ msg.textContent = "No se pudo precargar (se usará streaming)."; }
+  }
+  msg.textContent = "Listo ✓";
+}
+function playCortinilla(key){
+  if(cortvid.classList.contains("show")) return;     // ya reproduciéndose
+  cortvid.src = CORT_URLS[key] || CORT[key];
+  cortvid.currentTime = 0; cortvid.muted = false;
+  cortvid.classList.add("show");
+  cortvid.play().catch(()=>cortvid.classList.remove("show"));
+}
+function stopCortinilla(){ if(cortvid.classList.contains("show")){ cortvid.classList.remove("show"); cortvid.pause(); } }
 
 function casoActual(){ return CASOS.find(c => c.id === (STATE.evento.caso_actual||1)) || CASOS[0]; }
 function jugadoresPorEquipo(eq){ return Object.values(STATE.jugadores||{}).filter(j=>j.equipo===eq).length; }
@@ -111,6 +176,7 @@ function render(){
   pintarScore();
   const e = STATE.evento.estado || "lobby";
   document.body.classList.toggle("bgon", IDLE_STATES.includes(e));
+  if(e==="cortinilla") playCortinilla("cortinilla1"); else stopCortinilla();
   const c = casoActual();
   if(timerInt){ clearInterval(timerInt); timerInt=null; }
 
