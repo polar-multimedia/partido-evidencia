@@ -75,14 +75,16 @@
 <script src="../assets/common.js"></script>
 <script src="../assets/cases.js"></script>
 <script>
-const ST_NOMBRE = {lobby:"Lobby / Registro",cortinilla:"Cortinilla",contexto:"Contexto del caso",pregunta:"Pregunta (sin opciones)",
+const ST_NOMBRE = {lobby:"Lobby / Registro",cortinilla:"Cortinilla",pregunta:"Pregunta (sin opciones)",
   opciones:"Opciones (lee el ponente)",responder:"Respondiendo ⏱",bloqueo:"Bloqueo",
-  resultado:"Resultado / Gol",var:"VAR de la evidencia",cierre:"Cierre",final:"Final"};
+  resultado:"Resultado / Gol",var:"VAR de la evidencia",cierre:"Cierre",final:"Final / Campeón",despedida:"Despedida"};
 let EV={estado:"lobby",caso_actual:1}, JUG={}, VARS={}, ready=false;
 
 function esUltimo(){ return (EV.caso_actual||1) >= CASOS.length; }
 function jugN(eq){ return Object.values(JUG).filter(j=>j.equipo===eq).length; }
-function setEstado(e, extra){ if(ready) db.ref("evento").update(Object.assign({estado:e}, extra||{})); }
+function casoMod(){ return CASOS.find(x=>x.id===(EV.caso_actual||1)) || CASOS[0]; }
+function setEstado(e, extra){ if(ready) db.ref("evento").update(Object.assign({estado:e, mostrar_contexto:false, mostrar_qr:false}, extra||{})); }
+function toggleContexto(){ if(ready) db.ref("evento/mostrar_contexto").set(!EV.mostrar_contexto); }
 
 function abrirRespuestas(){
   const dur = Math.max(5, parseInt(document.getElementById("dur").value)||25);
@@ -146,8 +148,8 @@ function renderRoster(){
     + `<div class="rostercol"><div class="rh green">🛡️ Control Sostenido (${jugN('control')})</div><ul>${list('control')}</ul></div>`;
 }
 
-const ATRAS = {cortinilla:"lobby",contexto:"cortinilla",pregunta:"contexto",opciones:"pregunta",responder:"opciones",
-  bloqueo:"responder",resultado:"bloqueo","var":"resultado",cierre:"resultado",final:"resultado"};
+const ATRAS = {cortinilla:"lobby",pregunta:"cortinilla",opciones:"pregunta",responder:"opciones",
+  bloqueo:"responder",resultado:"bloqueo","var":"resultado",cierre:"resultado",final:"resultado",despedida:"final"};
 function atras(){ const p=ATRAS[EV.estado]; if(p) setEstado(p); }
 
 function reiniciar(){
@@ -192,13 +194,8 @@ function render(){
   function add(label, fn, cls){ const b=document.createElement("button");
     b.className="btn lg wide"+(cls?(" "+cls):""); b.textContent=label; b.onclick=fn; a.appendChild(b); }
   switch(EV.estado){
-    case "lobby":
-      add("▶️ Iniciar partido", ()=>setEstado("cortinilla"));
-      add(EV.mostrar_qr?"🙈 Ocultar QR en pantalla":"📲 Mostrar QR en pantalla",
-          ()=>db.ref("evento/mostrar_qr").set(!EV.mostrar_qr), "ghost");
-      break;
-    case "cortinilla": add("Mostrar contexto →", ()=>setEstado("contexto")); break;
-    case "contexto":   add("Mostrar pregunta →", ()=>setEstado("pregunta")); break;
+    case "lobby":      add("▶️ Iniciar partido", ()=>setEstado("cortinilla")); break;
+    case "cortinilla": add("Mostrar pregunta →", ()=>setEstado("pregunta")); break;
     case "pregunta":   add("Mostrar opciones →", ()=>setEstado("opciones")); break;
     case "opciones":   add("Abrir respuestas ⏱", abrirRespuestas, "teal"); break;
     case "responder":  add("🔔 Cerrar tiempo (silbato)", cerrarTiempo); break;
@@ -208,7 +205,18 @@ function render(){
       add(esUltimo()?"🏁 Finalizar partido":"Siguiente caso →", siguiente, "teal"); break;
     case "var":
       add(esUltimo()?"🏁 Finalizar partido":"Siguiente caso →", siguiente, "teal"); break;
-    case "final":      add("🔄 Nuevo partido (reiniciar)", reiniciar, "ghost danger"); break;
+    case "final":
+      add("👋 Reproducir despedida →", ()=>setEstado("despedida"), "teal");
+      add("🔄 Nuevo partido (reiniciar)", reiniciar, "ghost danger"); break;
+    case "despedida":
+      add("🔄 Nuevo partido (reiniciar)", reiniciar, "ghost danger"); break;
+  }
+  add(EV.mostrar_qr?"🙈 Ocultar QR":"📲 Mostrar QR de acceso",
+      ()=>db.ref("evento/mostrar_qr").set(!EV.mostrar_qr), "ghost");
+  const conCtx = ["pregunta","opciones","responder","bloqueo","resultado","var"].includes(EV.estado);
+  const cm = casoMod();
+  if(conCtx && cm && (cm.imagen || (cm.caso||"").trim())){
+    add(EV.mostrar_contexto?"🙈 Ocultar contexto":"👁 Ver contexto", toggleContexto, "ghost");
   }
   if(ATRAS[EV.estado]){ const bb=document.createElement("button");
     bb.className="btn ghost wide mini"; bb.textContent="↩️ Atrás (undo)"; bb.onclick=atras; a.appendChild(bb); }
