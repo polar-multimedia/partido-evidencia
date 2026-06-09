@@ -23,7 +23,7 @@
   #musica{position:fixed;inset:0;z-index:52;background:#000;display:none}
   #musica.show{display:block}
   #musica iframe{width:100%;height:100%;border:0}
-  #loopfull{position:fixed;inset:0;z-index:50;background:#000;display:none}
+  #loopfull{position:fixed;inset:0;z-index:55;background:#000;display:none}
   #loopfull.show{display:block}
   #loopfull video{width:100%;height:100%;object-fit:cover}
   #stage{position:fixed;inset:0;display:flex;flex-direction:column}
@@ -138,6 +138,8 @@ const cortvid = document.getElementById("cortvid");
 const bgloop  = document.getElementById("bgloop");
 const silbato = new Audio("../assets/silbato.mp3");
 silbato.preload = "auto";
+const reloj = new Audio("../assets/reloj.mp3");
+reloj.preload = "auto"; reloj.loop = true;
 let lastWhistleState = null;
 cortvid.addEventListener("error", ()=>cortvid.classList.remove("show"));  // si falla, cae a cortinilla CSS
 cortvid.addEventListener("ended", ()=>{ /* mantiene último cuadro hasta que el operador avance */ });
@@ -158,6 +160,7 @@ function unlockAudio(){
   }catch(e){}
   if(bgloop && bgloop.play) bgloop.play().catch(()=>{});
   try{ silbato.play().then(()=>{ silbato.pause(); silbato.currentTime=0; }).catch(()=>{}); }catch(e){}
+  try{ reloj.play().then(()=>{ reloj.pause(); reloj.currentTime=0; }).catch(()=>{}); }catch(e){}
 }
 async function preloadAll(){
   const files = cortFiles(), fill=document.getElementById("pfill"), msg=document.getElementById("pmsg");
@@ -257,6 +260,9 @@ function render(){
   else stopCortinilla();
   if(e==="bloqueo" && lastWhistleState!=="bloqueo"){ try{ silbato.currentTime=0; silbato.play().catch(()=>{}); }catch(_){} }
   lastWhistleState = e;
+  // sonido de reloj durante la cuenta regresiva
+  if(e==="responder"){ if(reloj.paused){ reloj.currentTime=0; reloj.play().catch(()=>{}); } }
+  else { if(!reloj.paused){ reloj.pause(); reloj.currentTime=0; } }
   renderCtxOverlay();
   renderQrOverlay();
   renderMusica();
