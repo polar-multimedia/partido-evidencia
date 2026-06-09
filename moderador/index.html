@@ -231,6 +231,8 @@ function render(){
       ()=>db.ref("evento/mostrar_qr").set(!EV.mostrar_qr), "ghost");
   add(EV.musica?"⏹️ Detener video musical":"🎵 Lanzar video musical",
       ()=>db.ref("evento/musica").set(!EV.musica), "ghost");
+  add(EV.loop_full?"⏹️ Detener loop":"🎬 Lanzar loop (sin sonido)",
+      ()=>db.ref("evento/loop_full").set(!EV.loop_full), "ghost");
   const conCtx = ["pregunta","opciones","responder","bloqueo","resultado","var"].includes(EV.estado);
   const cm = casoMod();
   if(conCtx && cm && (cm.imagen || (cm.caso||"").trim())){
