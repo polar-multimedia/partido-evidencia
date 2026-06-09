@@ -5,6 +5,10 @@
 <title>Control · El Partido de la Evidencia</title>
 <link rel="stylesheet" href="../assets/style.css">
 <style>
+  html{background:#0a0e15}
+  body{background:transparent}
+  #bgloop{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;opacity:.35}
+  #bgveil{position:fixed;inset:0;z-index:-1;background:linear-gradient(rgba(8,11,17,.72),rgba(8,11,17,.88))}
   #app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding:16px;gap:12px}
   .hdr{display:flex;align-items:center;justify-content:space-between}
   .hdr .brand{font-size:15px}
@@ -35,8 +39,20 @@
   .rostercol ul{margin:0;padding-left:18px;font-size:13px}
   .rostercol li{margin-bottom:3px}
   .teal{color:var(--teal)} .green{color:var(--green)}
+  /* Botones más grandes y legibles */
+  .actions .btn{font-size:19px;font-weight:800;padding:17px 20px;border-radius:14px;line-height:1.2}
+  .actions .btn.lg{font-size:22px;padding:20px 22px}
+  .actions .btn.ghost{background:rgba(15,22,32,.92);border:1px solid #34485e;color:#fff;box-shadow:none}
+  .actions .btn.ghost:hover{border-color:var(--teal)}
+  .actions .btn.mini{font-size:15px;padding:13px 16px}
+  .statebox{background:rgba(18,26,38,.94)}
+  .statebox .st{font-size:28px}
+  .stat{background:rgba(15,22,32,.92)}
+  .cfg, details, .rostercol{background:rgba(15,22,32,.92)}
 </style>
 </head><body>
+<video id="bgloop" src="../assets/loop.mp4" autoplay loop muted playsinline></video>
+<div id="bgveil"></div>
 <div id="app">
   <div class="hdr">
     <div class="brand">🎛️ Control <span class="kc">· Partido de la Evidencia</span></div>
@@ -213,6 +229,8 @@ function render(){
   }
   add(EV.mostrar_qr?"🙈 Ocultar QR":"📲 Mostrar QR de acceso",
       ()=>db.ref("evento/mostrar_qr").set(!EV.mostrar_qr), "ghost");
+  add(EV.musica?"⏹️ Detener video musical":"🎵 Lanzar video musical",
+      ()=>db.ref("evento/musica").set(!EV.musica), "ghost");
   const conCtx = ["pregunta","opciones","responder","bloqueo","resultado","var"].includes(EV.estado);
   const cm = casoMod();
   if(conCtx && cm && (cm.imagen || (cm.caso||"").trim())){

@@ -15,6 +15,14 @@
   #prep{position:fixed;inset:0;z-index:60;background:#0a0e15;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:30px}
   #prep .pbar{width:360px;max-width:80vw;height:10px;border-radius:999px;background:#1b2433;overflow:hidden}
   #prep .pfill{height:100%;width:0;background:var(--green);transition:width .2s}
+  #ctxoverlay{position:fixed;inset:0;z-index:45;background:rgba(8,11,17,.93);display:none;align-items:center;justify-content:center;padding:40px}
+  #ctxoverlay.show{display:flex}
+  #qroverlay{position:fixed;inset:0;z-index:48;background:rgba(8,11,17,.96);display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center}
+  #qroverlay.show{display:flex}
+  #qrbig{background:#fff;padding:22px;border-radius:18px}
+  #musica{position:fixed;inset:0;z-index:52;background:#000;display:none}
+  #musica.show{display:block}
+  #musica iframe{width:100%;height:100%;border:0}
   #stage{position:fixed;inset:0;display:flex;flex-direction:column}
   /* scoreboard superior */
   #scoreboard{display:flex;align-items:center;justify-content:space-between;gap:20px;
@@ -86,6 +94,9 @@
   </div>
   <div id="main"><div id="scene" class="scene"></div></div>
 </div>
+<div id="ctxoverlay"></div>
+<div id="qroverlay"></div>
+<div id="musica"></div>
 <div id="reactions"></div>
 <div id="cfgnote"></div>
 
@@ -113,8 +124,10 @@ let STATE = { evento:{estado:"lobby",caso_actual:1}, equipos:{}, jugadores:{}, r
 let lastReactKey = null, timerInt = null;
 
 /* ---- Cortinillas de video (precarga + audio) ---- */
-const CORT = { "cortinilla1":"../assets/cortinilla1.mp4" };  // momento -> archivo
-const CORT_URLS = {};   // momento -> blob URL tras precargar
+const CORT_URLS = {};   // archivo -> blob URL tras precargar
+const DESPEDIDA = "despedida.mp4";
+function cortFiles(){ return [...new Set([...CASOS.map(c=>c.cortinilla), DESPEDIDA].filter(Boolean))]; }
+function cortPath(f){ return "../assets/"+f; }
 let PREPARED = false;
 const cortvid = document.getElementById("cortvid");
 const bgloop  = document.getElementById("bgloop");
@@ -133,37 +146,40 @@ function prepStart(){
 function prepSkip(){ unlockAudio(); finishPrep(); }
 function finishPrep(){ PREPARED = true; document.getElementById("prep").classList.add("hidden"); }
 function unlockAudio(){
+  const first = cortFiles()[0];
   try{
-    cortvid.src = CORT["cortinilla1"]; cortvid.muted = false;
-    cortvid.play().then(()=>{ cortvid.pause(); cortvid.currentTime = 0; }).catch(()=>{});
+    if(first){ cortvid.src = cortPath(first); cortvid.muted = false;
+      cortvid.play().then(()=>{ cortvid.pause(); cortvid.currentTime = 0; }).catch(()=>{}); }
   }catch(e){}
   if(bgloop && bgloop.play) bgloop.play().catch(()=>{});
   try{ silbato.play().then(()=>{ silbato.pause(); silbato.currentTime=0; }).catch(()=>{}); }catch(e){}
 }
 async function preloadAll(){
-  const keys = Object.keys(CORT), fill=document.getElementById("pfill"), msg=document.getElementById("pmsg");
-  for(let i=0;i<keys.length;i++){
+  const files = cortFiles(), fill=document.getElementById("pfill"), msg=document.getElementById("pmsg");
+  for(let i=0;i<files.length;i++){
     try{
-      const res = await fetch(CORT[keys[i]]);
+      const res = await fetch(cortPath(files[i])); if(!res.ok) throw 0;
       const total = +(res.headers.get("Content-Length")||0);
       const reader = res.body.getReader(); let rec=0; const chunks=[];
       while(true){ const {done,value}=await reader.read(); if(done) break; chunks.push(value); rec+=value.length;
-        const p = total? rec/total : 0; fill.style.width = Math.round(((i+p)/keys.length)*100)+"%";
-        msg.textContent = "Precargando "+(i+1)+"/"+keys.length+" · "+Math.round(rec/1048576)+" MB"; }
-      CORT_URLS[keys[i]] = URL.createObjectURL(new Blob(chunks,{type:"video/mp4"}));
-      fill.style.width = Math.round(((i+1)/keys.length)*100)+"%";
-    }catch(e){ msg.textContent = "No se pudo precargar (se usará streaming)."; }
+        const p = total? rec/total : 0; fill.style.width = Math.round(((i+p)/files.length)*100)+"%";
+        msg.textContent = "Precargando "+(i+1)+"/"+files.length+" · "+Math.round(rec/1048576)+" MB"; }
+      CORT_URLS[files[i]] = URL.createObjectURL(new Blob(chunks,{type:"video/mp4"}));
+      fill.style.width = Math.round(((i+1)/files.length)*100)+"%";
+    }catch(e){ /* archivo faltante: usará streaming o cortinilla CSS */ }
   }
   msg.textContent = "Listo ✓";
 }
-function playCortinilla(key){
-  if(cortvid.classList.contains("show")) return;     // ya reproduciéndose
-  cortvid.src = CORT_URLS[key] || CORT[key];
+function playVideo(file){
+  if(!file){ stopCortinilla(); return; }                       // sin video -> CSS
+  if(cortvid.classList.contains("show") && cortvid.dataset.file===file) return;
+  cortvid.dataset.file = file;
+  cortvid.src = CORT_URLS[file] || cortPath(file);
   cortvid.currentTime = 0; cortvid.muted = false;
   cortvid.classList.add("show");
   cortvid.play().catch(()=>cortvid.classList.remove("show"));
 }
-function stopCortinilla(){ if(cortvid.classList.contains("show")){ cortvid.classList.remove("show"); cortvid.pause(); } }
+function stopCortinilla(){ if(cortvid.classList.contains("show")){ cortvid.classList.remove("show"); cortvid.pause(); cortvid.dataset.file=""; } }
 
 function casoActual(){ return CASOS.find(c => c.id === (STATE.evento.caso_actual||1)) || CASOS[0]; }
 function jugadoresPorEquipo(eq){ return Object.values(STATE.jugadores||{}).filter(j=>j.equipo===eq).length; }
@@ -185,19 +201,59 @@ function nRespuestas(){
 function nConectados(){ return Object.values(STATE.jugadores||{}).filter(j=>j.conectado!==false).length; }
 
 const IDLE_STATES = ["lobby","cortinilla","cierre","final"];
+function renderCtxOverlay(){
+  const o = document.getElementById("ctxoverlay");
+  const c = casoActual();
+  const has = STATE.evento.mostrar_contexto && c && (c.imagen || (c.caso||"").trim());
+  if(!has){ o.classList.remove("show"); o.innerHTML=""; return; }
+  o.innerHTML = `<div class="casebox pop">
+      <div class="lbl">Contexto · Caso ${STATE.evento.caso_actual}</div>
+      ${(c.caso||"").trim() ? `<div class="ctext">${escapeHTML(c.caso)}</div>` : ""}
+      ${c.imagen ? `<img class="caseimg" src="../assets/${c.imagen}" alt="">` : ""}</div>`;
+  o.classList.add("show");
+}
+function renderQrOverlay(){
+  const o = document.getElementById("qroverlay");
+  if(!STATE.evento.mostrar_qr){ o.classList.remove("show"); o.dataset.done=""; o.innerHTML=""; return; }
+  if(o.dataset.done!=="1"){
+    const baseDir = location.pathname.replace(/pantalla\/?(index\.html)?$/i, "");
+    const mesaURL = location.origin + baseDir + "mesa/";
+    o.innerHTML = `<div class="tag">Escanea para unirte al partido</div><div id="qrbig"></div>
+      <div class="muted" style="font-size:16px;max-width:80vw;word-break:break-all">${escapeHTML(mesaURL)}</div>`;
+    if(typeof QRCode!=="undefined"){ new QRCode(document.getElementById("qrbig"), { text:mesaURL, width:340, height:340, colorDark:"#0a0e15", colorLight:"#ffffff" }); }
+    o.dataset.done = "1";
+  }
+  o.classList.add("show");
+}
+function renderMusica(){
+  const o = document.getElementById("musica");
+  if(STATE.evento.musica){
+    if(o.dataset.on!=="1"){
+      o.innerHTML = `<iframe src="https://player.vimeo.com/video/1199836067?autoplay=1&title=0&byline=0&portrait=0&dnt=1"
+        allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+      o.dataset.on = "1";
+    }
+    o.classList.add("show");
+  } else {
+    o.classList.remove("show"); o.innerHTML=""; o.dataset.on="";
+  }
+}
 function render(){
   pintarScore();
   const e = STATE.evento.estado || "lobby";
   document.body.classList.toggle("bgon", IDLE_STATES.includes(e));
-  if(e==="cortinilla") playCortinilla("cortinilla1"); else stopCortinilla();
+  if(e==="cortinilla") playVideo((casoActual()||{}).cortinilla);
+  else if(e==="despedida") playVideo(DESPEDIDA);
+  else stopCortinilla();
   if(e==="bloqueo" && lastWhistleState!=="bloqueo"){ try{ silbato.currentTime=0; silbato.play().catch(()=>{}); }catch(_){} }
   lastWhistleState = e;
+  renderCtxOverlay();
+  renderQrOverlay();
+  renderMusica();
   const c = casoActual();
   if(timerInt){ clearInterval(timerInt); timerInt=null; }
 
   if(e==="lobby"){
-    const showQR = !!STATE.evento.mostrar_qr;
-    const mesaURL = location.origin + location.pathname.replace(/pantalla\/.*/,"mesa/");
     scene.innerHTML = `
       <div class="lobbybanner" style="margin-top:-20px">
         <div class="lb-team">
@@ -210,26 +266,15 @@ function render(){
           <div class="lb-name" style="color:var(--green)">Control Sostenido <b>${jugadoresPorEquipo("control")}</b></div>
         </div>
       </div>
-      <div class="qrslot">${showQR ? '<div id="qr"></div>' : ''}</div>
-      <div class="tag">${showQR?"Escanea y únete al partido":"La evidencia entra a la cancha"}</div>
+      <div class="qrslot"></div>
+      <div class="tag">La evidencia entra a la cancha</div>
       <h1 class="brand" style="font-size:64px;margin:6px 0 0">El Partido <span class="kc">de la Evidencia</span></h1>
       <div style="margin-top:10px;font-size:18px" class="muted">${nConectados()} médicos conectados</div>`;
-    if(showQR){
-      if(typeof QRCode!=="undefined"){ new QRCode(document.getElementById("qr"), { text:mesaURL, width:260, height:260, colorDark:"#0a0e15", colorLight:"#ffffff" }); }
-      else { const q=document.getElementById("qr"); if(q) q.outerHTML = '<div class="muted" style="font-size:18px">'+escapeHTML(mesaURL)+'</div>'; }
-    }
   }
   else if(e==="cortinilla"){
     scene.innerHTML = `<div class="tag">La evidencia entra a la cancha</div>
       <div class="big pop">CASO ${STATE.evento.caso_actual}</div>
       <div class="muted" style="font-size:26px;margin-top:14px">Prepárate…</div>`;
-  }
-  else if(e==="contexto"){
-    scene.innerHTML = `<div class="casebox pop">
-        <div class="lbl">Contexto · Caso ${STATE.evento.caso_actual}</div>
-        <div class="ctext">${escapeHTML(c.caso)}</div>
-        ${c.imagen ? `<img class="caseimg" src="../assets/${c.imagen}" alt="">` : ""}</div>
-      <div class="muted" style="font-size:22px;margin-top:18px">El ponente está presentando el contexto…</div>`;
   }
   else if(e==="pregunta"){
     scene.innerHTML = `<div class="casebox pop">
@@ -296,6 +341,10 @@ function render(){
     html += `<div style="font-size:26px;margin-top:12px" class="muted">⚡ ${r} &nbsp;·&nbsp; 🛡️ ${cc}</div>
       <div class="msgkey" style="margin-top:22px">🏆 Ki-CAB es la jugada ganadora en acidez, reflujo y gastritis leves/moderadas.</div>`;
     scene.innerHTML = html;
+  }
+  else if(e==="despedida"){
+    scene.innerHTML = `<div class="big pop" style="font-size:56px">¡Gracias por jugar!</div>
+      <div class="msgkey" style="margin-top:18px">Ki-CAB · La evidencia entra a la cancha</div>`;
   }
 }
 

@@ -282,7 +282,6 @@ function render(){
   switch(EV.estado){
     case "lobby":      watch("Esperando a que inicie el partido…","⏳"); break;
     case "cortinilla": watch("Caso "+EV.caso_actual,"⚽"); break;
-    case "contexto":   renderContexto(); break;
     case "pregunta":   renderLectura(false); break;
     case "opciones":   renderLectura(true); break;
     case "responder":  renderResponder(); break;
@@ -291,6 +290,7 @@ function render(){
     case "var":        watch("Vamos al VAR — revisando la evidencia","🟥"); break;
     case "cierre":     watch("Siguiente jugada…","➡️"); break;
     case "final":      renderFinal(); break;
+    case "despedida":  renderFinal(); break;
     default:           watch("Conectando…","⏳");
   }
 }
