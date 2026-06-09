@@ -75,7 +75,7 @@
 <script src="../assets/common.js"></script>
 <script src="../assets/cases.js"></script>
 <script>
-const ST_NOMBRE = {lobby:"Lobby / Registro",cortinilla:"Cortinilla",pregunta:"Pregunta (sin opciones)",
+const ST_NOMBRE = {lobby:"Lobby / Registro",cortinilla:"Cortinilla",contexto:"Contexto del caso",pregunta:"Pregunta (sin opciones)",
   opciones:"Opciones (lee el ponente)",responder:"Respondiendo ⏱",bloqueo:"Bloqueo",
   resultado:"Resultado / Gol",var:"VAR de la evidencia",cierre:"Cierre",final:"Final"};
 let EV={estado:"lobby",caso_actual:1}, JUG={}, VARS={}, ready=false;
@@ -146,7 +146,7 @@ function renderRoster(){
     + `<div class="rostercol"><div class="rh green">🛡️ Control Sostenido (${jugN('control')})</div><ul>${list('control')}</ul></div>`;
 }
 
-const ATRAS = {cortinilla:"lobby",pregunta:"cortinilla",opciones:"pregunta",responder:"opciones",
+const ATRAS = {cortinilla:"lobby",contexto:"cortinilla",pregunta:"contexto",opciones:"pregunta",responder:"opciones",
   bloqueo:"responder",resultado:"bloqueo","var":"resultado",cierre:"resultado",final:"resultado"};
 function atras(){ const p=ATRAS[EV.estado]; if(p) setEstado(p); }
 
@@ -197,7 +197,8 @@ function render(){
       add(EV.mostrar_qr?"🙈 Ocultar QR en pantalla":"📲 Mostrar QR en pantalla",
           ()=>db.ref("evento/mostrar_qr").set(!EV.mostrar_qr), "ghost");
       break;
-    case "cortinilla": add("Mostrar el caso →", ()=>setEstado("pregunta")); break;
+    case "cortinilla": add("Mostrar contexto →", ()=>setEstado("contexto")); break;
+    case "contexto":   add("Mostrar pregunta →", ()=>setEstado("pregunta")); break;
     case "pregunta":   add("Mostrar opciones →", ()=>setEstado("opciones")); break;
     case "opciones":   add("Abrir respuestas ⏱", abrirRespuestas, "teal"); break;
     case "responder":  add("🔔 Cerrar tiempo (silbato)", cerrarTiempo); break;
@@ -209,6 +210,8 @@ function render(){
       add(esUltimo()?"🏁 Finalizar partido":"Siguiente caso →", siguiente, "teal"); break;
     case "final":      add("🔄 Nuevo partido (reiniciar)", reiniciar, "ghost danger"); break;
   }
+  if(ATRAS[EV.estado]){ const bb=document.createElement("button");
+    bb.className="btn ghost wide mini"; bb.textContent="↩️ Atrás (undo)"; bb.onclick=atras; a.appendChild(bb); }
 }
 
 fbOnReady(()=>{

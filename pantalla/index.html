@@ -224,13 +224,18 @@ function render(){
       <div class="big pop">CASO ${STATE.evento.caso_actual}</div>
       <div class="muted" style="font-size:26px;margin-top:14px">Prepárate…</div>`;
   }
+  else if(e==="contexto"){
+    scene.innerHTML = `<div class="casebox pop">
+        <div class="lbl">Contexto · Caso ${STATE.evento.caso_actual}</div>
+        <div class="ctext">${escapeHTML(c.caso)}</div>
+        ${c.imagen ? `<img class="caseimg" src="../assets/${c.imagen}" alt="">` : ""}</div>
+      <div class="muted" style="font-size:22px;margin-top:18px">El ponente está presentando el contexto…</div>`;
+  }
   else if(e==="pregunta"){
     scene.innerHTML = `<div class="casebox pop">
-        <div class="lbl">Caso clínico · ${STATE.evento.caso_actual}</div>
-        <div class="ctext">${escapeHTML(c.caso)}</div>
-        ${c.imagen ? `<img class="caseimg" src="../assets/${c.imagen}" alt="">` : ""}
+        <div class="lbl">Pregunta · Caso ${STATE.evento.caso_actual}</div>
         <div class="q">${escapeHTML(c.pregunta)}</div></div>
-      <div class="muted" style="font-size:22px;margin-top:18px">El ponente está leyendo el caso…</div>`;
+      <div class="muted" style="font-size:22px;margin-top:18px">El ponente está leyendo la pregunta…</div>`;
   }
   else if(e==="opciones" || e==="responder" || e==="bloqueo" || e==="resultado"){
     const showTimer = (e==="responder");

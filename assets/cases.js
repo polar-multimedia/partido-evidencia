@@ -18,9 +18,9 @@
 const CASOS = [
   {
     id: 1,
-    caso: "Paciente masculino de 55 años, con sobrepeso, consulta por pirosis, regurgitación y ardor epigástrico de 6 meses de evolución. Niega pérdida de peso, anemia, vómito persistente, disfagia o sangrado. Se realiza endoscopia.",
+    caso: "Paciente masculino de 55 años, con sobrepeso, consulta por pirosis, regurgitación, ardor epigástrico de 6 meses de evolución. Niega pérdida de peso, anemia, vómito persistente, disfagia o sangrado. Se realiza endoscopia:",
     imagen: "duodenos.png",
-    pregunta: "¿Por qué el tegoprazán (P-CAB) es la mejor elección terapéutica en este paciente?",
+    pregunta: "Hallazgo de esofagitis B de Los Ángeles y mucosa gástrica normal. Prueba rápida de ureasa y biopsia positivas para Helicobacter pylori. ¿Cuál es la mejor justificación para elegir tegoprazán como tratamiento de primera elección?",
     opciones: {
       A: "Produce inhibición irreversible de la bomba de protones, generando control sintomático después de varios días de administración continua.",
       B: "Porque logra una elevación rápida y sostenida del pH intragástrico desde la primera dosis, favoreciendo simultáneamente control sintomático, cicatrización de ERGE y la erradicación de H. pylori.",

@@ -189,12 +189,18 @@ function entrar(){
 function watch(txt, em){
   view.innerHTML = `<div class="watch"><div class="em">${em||"👀"}</div><h2>${txt}</h2></div>`;
 }
-/* Lectura sincronizada: el médico lee el caso/opciones en su celular igual que en la pantalla */
+/* Contexto del caso (texto + imagen, sin pregunta) */
+function renderContexto(){
+  const c = casoActual();
+  view.innerHTML = `<div class="mcase"><div class="lbl">Contexto · Caso ${EV.caso_actual}</div>
+      <div class="ct">${escapeHTML(c.caso)}</div>
+      ${c.imagen ? `<img class="mcaseimg" src="../assets/${c.imagen}" alt="">` : ""}</div>
+    <p class="muted" style="text-align:center;margin-top:10px">👀 Lee el contexto — también está en la pantalla</p>`;
+}
+/* Lectura sincronizada: el médico lee la pregunta/opciones igual que en la pantalla */
 function renderLectura(showOpts){
   const c = casoActual();
-  let html = `<div class="mcase"><div class="lbl">Caso ${EV.caso_actual}</div>
-      <div class="ct">${escapeHTML(c.caso)}</div>
-      ${c.imagen ? `<img class="mcaseimg" src="../assets/${c.imagen}" alt="">` : ""}
+  let html = `<div class="mcase"><div class="lbl">Pregunta · Caso ${EV.caso_actual}</div>
       <div class="qq">${escapeHTML(c.pregunta)}</div></div>`;
   if(showOpts){
     html += `<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">`
@@ -276,6 +282,7 @@ function render(){
   switch(EV.estado){
     case "lobby":      watch("Esperando a que inicie el partido…","⏳"); break;
     case "cortinilla": watch("Caso "+EV.caso_actual,"⚽"); break;
+    case "contexto":   renderContexto(); break;
     case "pregunta":   renderLectura(false); break;
     case "opciones":   renderLectura(true); break;
     case "responder":  renderResponder(); break;

@@ -6,7 +6,7 @@ const TEAMS = {
 };
 
 /* Estados de la máquina (orden del ciclo de una pregunta) */
-const STATES = ["lobby","cortinilla","pregunta","opciones","responder","bloqueo","resultado","var","cierre","final"];
+const STATES = ["lobby","cortinilla","contexto","pregunta","opciones","responder","bloqueo","resultado","var","cierre","final"];
 
 const OPT_COLORS = { A:"#21c17a", B:"#2f86eb", C:"#e8554d", D:"#f2b53b" };
 
