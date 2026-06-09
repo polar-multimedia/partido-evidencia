@@ -52,7 +52,7 @@ const CASOS = [
     id: 2,
     cortinilla: "cortinilla2.mp4",
     caso: "",
-    pregunta: "¿Cuánto tiempo se dará tratamiento para la esofagitis leve grado B?",
+    pregunta: "¿Cuánto tiempo se dará tratamiento para la esofagitis leve grado B a este paciente?",
     opciones: {
       A: "tegoprazan 50 mg cada 12 horas por 2 meses",
       B: "Tegoprazan 50 mg cada 24 horas por 2 meses y a demanda",
@@ -96,6 +96,7 @@ const CASOS = [
         "El tegoprazán (P-CAB) eleva y sostiene el pH, mejorando la eficacia de los antibióticos."
       ]
     },
+    evidencia_imagen: "evidencia3.png",
     fuentes: [
       "J.M. Remes-Troche et al. V consenso mexicano sobre el diagnóstico y tratamiento de la infección por Helicobacter pylori. Rev Gastroenterol Méx. 2026;91:89-114."
     ],
@@ -105,7 +106,7 @@ const CASOS = [
     id: 4,
     cortinilla: "cortinilla4.mp4",
     caso: "Tras completar el tratamiento erradicador de H. pylori, el paciente mejora significativamente de la epigastralgia.",
-    pregunta: "¿Cuál es el siguiente paso recomendado para confirmar el éxito terapéutico?",
+    pregunta: "Tras completar el tratamiento erradicador de H. pylori, el paciente mejora significativamente de la epigastralgia. ¿Cuál es el siguiente paso recomendado para confirmar el éxito terapéutico?",
     opciones: {
       A: "Repetir endoscopia digestiva alta inmediatamente.",
       B: "Solicitar serología IgG para H. pylori.",
