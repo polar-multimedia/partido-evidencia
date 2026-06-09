@@ -18,9 +18,10 @@
 const CASOS = [
   {
     id: 1,
-    caso: "Paciente masculino de 55 años, con sobrepeso, consulta por pirosis, regurgitación, ardor epigástrico de 6 meses de evolución. Niega pérdida de peso, anemia, vómito persistente, disfagia o sangrado. Se realiza endoscopia:",
+    cortinilla: "cortinilla1-contexto.mp4",
+    caso: "Paciente masculino de 55 años, con sobrepeso, pirosis, regurgitación y ardor epigástrico de 6 meses. Niega datos de alarma. Se realiza endoscopia.",
     imagen: "duodenos.png",
-    pregunta: "Hallazgo de esofagitis B de Los Ángeles y mucosa gástrica normal. Prueba rápida de ureasa y biopsia positivas para Helicobacter pylori. ¿Cuál es la mejor justificación para elegir tegoprazán como tratamiento de primera elección?",
+    pregunta: "Hallazgo de Esofagitis B de los Ángeles y mucosa gástrica normal. Prueba rápida de ureasa y biopsia positiva para Helicobacter pylori. ¿cuál es la mejor justificación para elegir Tegoprazan como tratamiento de primera elección?",
     opciones: {
       A: "Produce inhibición irreversible de la bomba de protones, generando control sintomático después de varios días de administración continua.",
       B: "Porque logra una elevación rápida y sostenida del pH intragástrico desde la primera dosis, favoreciendo simultáneamente control sintomático, cicatrización de ERGE y la erradicación de H. pylori.",
@@ -49,13 +50,14 @@ const CASOS = [
   },
   {
     id: 2,
-    caso: "La endoscopia del paciente confirma esofagitis por reflujo grado B (clasificación de Los Ángeles). Se decide iniciar tratamiento con tegoprazán.",
-    pregunta: "¿Cuánto tiempo se dará el tratamiento para la esofagitis leve grado B?",
+    cortinilla: "cortinilla2.mp4",
+    caso: "",
+    pregunta: "¿Cuánto tiempo se dará tratamiento para la esofagitis leve grado B?",
     opciones: {
-      A: "Tegoprazán 50 mg cada 12 horas por 2 meses.",
-      B: "Tegoprazán 50 mg cada 24 horas por 2 meses y a demanda.",
-      C: "Tegoprazán 50 mg cada 24 horas por 2 meses y después mantenimiento 25 mg cada 24 horas.",
-      D: "Tegoprazán 50 mg, 30 minutos a 1 hora antes del desayuno, cada 24 horas por 2 meses."
+      A: "tegoprazan 50 mg cada 12 horas por 2 meses",
+      B: "Tegoprazan 50 mg cada 24 horas por 2 meses y a demanda",
+      C: "Tegoprazan 50 mg cada 24 horas por 2 meses y después de mantenimiento 25 mg cada 24 horas",
+      D: "Tegoprazan 50 mg, 30 minutos a 1 hora antes del desayuno cada 24 horas por 2 meses"
     },
     correcta: "B",
     mensaje_clave: "Esofagitis leve grado B: tratamiento de inducción y luego a demanda — y el tegoprazán alivia desde los primeros 30 minutos.",
@@ -75,6 +77,7 @@ const CASOS = [
   },
   {
     id: 3,
+    cortinilla: "cortinilla3.mp4",
     caso: "Se confirma infección por Helicobacter pylori en el paciente. México es una región con alta resistencia a claritromicina.",
     pregunta: "¿Cuál sería un esquema adecuado de erradicación de H. pylori basado en tegoprazán en regiones como México con alta resistencia a claritromicina?",
     opciones: {
@@ -100,6 +103,7 @@ const CASOS = [
   },
   {
     id: 4,
+    cortinilla: "cortinilla4.mp4",
     caso: "Tras completar el tratamiento erradicador de H. pylori, el paciente mejora significativamente de la epigastralgia.",
     pregunta: "¿Cuál es el siguiente paso recomendado para confirmar el éxito terapéutico?",
     opciones: {
