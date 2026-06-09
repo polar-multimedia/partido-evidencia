@@ -48,6 +48,7 @@
   .mcase .lbl{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:800}
   .mcase .ct{font-size:15px;line-height:1.42;margin:6px 0 10px;color:#d4dfeb}
   .mcase .qq{font-size:18px;font-weight:800;line-height:1.3}
+  .mcaseimg{width:100%;border-radius:10px;margin:8px 0 4px;display:block}
   /* ---- Registro estilo app deportiva ---- */
   .reg{display:flex;flex-direction:column;gap:14px}
   .hero{position:relative;border-radius:20px;overflow:hidden;padding:6px 4px 14px}
@@ -193,10 +194,11 @@ function renderLectura(showOpts){
   const c = casoActual();
   let html = `<div class="mcase"><div class="lbl">Caso ${EV.caso_actual}</div>
       <div class="ct">${escapeHTML(c.caso)}</div>
+      ${c.imagen ? `<img class="mcaseimg" src="../assets/${c.imagen}" alt="">` : ""}
       <div class="qq">${escapeHTML(c.pregunta)}</div></div>`;
   if(showOpts){
     html += `<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">`
-      + ["A","B","C","D"].map(k=>`<button class="opt" disabled>
+      + opcionKeys(c).map(k=>`<button class="opt" disabled>
           <span class="k ${k}">${k}</span><span>${escapeHTML(c.opciones[k])}</span></button>`).join("")
       + `</div><p class="muted" style="text-align:center;margin-top:10px">Prepárate… podrás responder en unos segundos</p>`;
   } else {
@@ -211,7 +213,7 @@ function renderResponder(){
     <div id="mtimer" class="timer">--</div>
     <p class="muted" style="text-align:center;margin:0 0 4px">Toca tu respuesta · puedes cambiar hasta el silbato</p>
     <div style="display:flex;flex-direction:column;gap:12px" id="optwrap">
-      ${["A","B","C","D"].map(k=>`<button class="opt" data-k="${k}" onclick="responder('${k}')">
+      ${opcionKeys(c).map(k=>`<button class="opt" data-k="${k}" onclick="responder('${k}')">
         <span class="k ${k}">${k}</span><span>${escapeHTML(c.opciones[k])}</span></button>`).join("")}
     </div>`;
   marcarSel();
@@ -241,10 +243,11 @@ function startTimer(){
 }
 function renderResultado(){
   const c = casoActual();
-  const acerto = miRespuesta && miRespuesta===c.correcta;
+  const acerto = esCorrecta(c, miRespuesta);
   const sinResp = !miRespuesta;
+  const corrLbl = correctSet(c).length>1 ? "Respuestas correctas" : "Respuesta correcta";
   let html = `<div class="result-big" style="color:${acerto?'var(--green)':'var(--red)'}">${acerto?'✓ ¡Acertaste!':(sinResp?'⏱ Sin respuesta':'✗ Fallaste')}</div>
-    <p class="muted" style="text-align:center;margin:4px 0">Respuesta correcta: <b style="color:var(--green)">${c.correcta}</b></p>
+    <p class="muted" style="text-align:center;margin:4px 0">${corrLbl}: <b style="color:var(--green)">${correctasTexto(c)}</b></p>
     <div class="react">
       <button onclick="reaccion('👏')">👏</button>
       <button onclick="reaccion('⚽')">⚽</button>
@@ -262,7 +265,7 @@ function pedirVar(){
 function renderFinal(){
   view.innerHTML = `<h2>🏁 Resumen del partido</h2>
     <p class="muted" style="margin:0">Tus aprendizajes para llevar:</p>
-    <ul class="learn">${CASOS.map(c=>`<li><b>Caso ${c.id}.</b> Correcta: <span class="ok">${c.correcta}) ${escapeHTML(c.opciones[c.correcta])}</span><br>
+    <ul class="learn">${CASOS.map(c=>`<li><b>Caso ${c.id}.</b> ${correctSet(c).length>1?'Correctas':'Correcta'}: <span class="ok">${escapeHTML(correctSet(c).map(k=>k+") "+c.opciones[k]).join(" · "))}</span><br>
        <span class="muted">💊 ${escapeHTML(c.mensaje_clave)}</span></li>`).join("")}</ul>
     <p class="muted" style="text-align:center">Gracias por jugar · Ki-CAB</p>`;
 }

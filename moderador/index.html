@@ -57,7 +57,7 @@
   <div id="varInfo"></div>
   <div class="actions" id="actions"></div>
   <div class="cfg">⏱ Duración por pregunta
-    <input id="dur" type="number" min="5" max="120" value="25"> seg</div>
+    <input id="dur" type="number" min="5" max="120" value="15"> seg</div>
   <details><summary>Herramientas</summary>
     <div class="actions" style="margin-top:10px">
       <button class="btn ghost mini" onclick="exportar()">⬇️ Exportar analítica (JSON)</button>
@@ -113,7 +113,7 @@ function revelar(){
       const inicio=(EV.cronometro&&EV.cronometro.inicio)||0;
       const add={rapido:0,control:0}, correctos={rapido:0,control:0}, updates={};
       Object.entries(resp).forEach(([uid,r])=>{
-        const ok = r.opcion===c.correcta;
+        const ok = esCorrecta(c, r.opcion);
         const tRest = Math.max(0, dur-((r.ts-inicio)/1000));
         const racha = (eq[r.equipo]||{}).racha||0;
         const pts = calcPuntos(ok, tRest, dur, racha);
@@ -125,7 +125,8 @@ function revelar(){
         eq[t].puntaje=(eq[t].puntaje||0)+add[t];
         eq[t].racha = correctos[t]>0 ? ((eq[t].racha||0)+1) : 0;
       });
-      updates["equipos"]=eq; updates["scored/"+cid]=true;
+      const gol = add.rapido>add.control ? "rapido" : (add.control>add.rapido ? "control" : "empate");
+      updates["equipos"]=eq; updates["scored/"+cid]=true; updates["evento/gol_ronda"]=gol;
       db.ref().update(updates).then(()=>setEstado("resultado"));
     });
   });

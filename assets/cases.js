@@ -18,69 +18,110 @@
 const CASOS = [
   {
     id: 1,
-    caso: "Paciente masculino de 48 años con ERGE moderada. Presenta pirosis y regurgitación 4 días por semana. Se decide iniciar terapia con un P-CAB.",
-    pregunta: "¿Cuál de las siguientes afirmaciones sobre los P-CAB (tegoprazán) es CORRECTA?",
+    caso: "Paciente masculino de 55 años, con sobrepeso, consulta por pirosis, regurgitación y ardor epigástrico de 6 meses de evolución. Niega pérdida de peso, anemia, vómito persistente, disfagia o sangrado. Se realiza endoscopia.",
+    imagen: "duodenos.png",
+    pregunta: "¿Por qué el tegoprazán (P-CAB) es la mejor elección terapéutica en este paciente?",
     opciones: {
-      A: "Requieren activación ácida para inhibir la bomba de protones.",
-      B: "Su efecto máximo se alcanza después de varios días de uso.",
-      C: "Inhiben la bomba de protones de forma irreversible.",
-      D: "Se unen de forma competitiva y reversible a la bomba de protones."
+      A: "Produce inhibición irreversible de la bomba de protones, generando control sintomático después de varios días de administración continua.",
+      B: "Porque logra una elevación rápida y sostenida del pH intragástrico desde la primera dosis, favoreciendo simultáneamente control sintomático, cicatrización de ERGE y la erradicación de H. pylori.",
+      C: "Logra una supresión ácida impredecible, ya que es dependiente del horario de administración y del estado funcional de las bombas de protones.",
+      D: "Porque ejerce actividad bactericida directa sobre H. pylori, incluso en cepas resistentes a claritromicina."
     },
-    correcta: "D",
-    mensaje_clave: "P-CAB (tegoprazán): unión competitiva y reversible → control del ácido desde la 1ª toma.",
+    correcta: "B",
+    mensaje_clave: "Tegoprazán: pH alto y sostenido desde la 1ª dosis → control de ERGE y apoyo en la erradicación de H. pylori.",
     evidencia: {
-      titulo: "Mecanismo de acción: P-CAB vs IBP",
+      titulo: "Tegoprazán (P-CAB) vs IBP",
       puntos: [
-        "Los IBP son profármacos que REQUIEREN activación en medio ácido; el P-CAB no.",
-        "El P-CAB bloquea de forma competitiva (con el K⁺) y reversible la H⁺/K⁺-ATPasa.",
-        "Acción rápida desde la primera toma (~30 min), sin necesidad de acumulación de días.",
-        "Control sostenido del ácido por 24 h, incluida la secreción nocturna."
+        "Tegoprazán actúa directo en la bomba de protones; el IBP necesita transformarse a su forma activa (sulfenamida).",
+        "Tegoprazán actúa en bombas de protones activas e inactivas; el IBP solo en las activas.",
+        "Tegoprazán actúa desde la primera dosis; el IBP requiere varias dosis para ver el efecto.",
+        "Tegoprazán no depende de la ingesta de alimentos; el efecto del IBP sí depende del alimento.",
+        "Tegoprazán logra supresión completa y sostenida; el IBP deja supresión incompleta con síntomas nocturnos.",
+        "La acción del tegoprazán no se afecta por el polimorfismo genético; la del IBP sí."
       ]
     },
+    evidencia_imagen: "evidencia_hpylori.png",
+    fuentes: [
+      "Scarpignato C et al. Pharmacologic treatment of GERD: Where we are now, and where are we going? Ann N.Y. Acad Sci. 2020.",
+      "Herszényi L et al. Pharmacological Approach to Gastric Acid Suppression: Past, Present, and Future. Dig Dis. 2020;38:104-111."
+    ],
     validado: true
   },
   {
     id: 2,
-    caso: "Mujer de 35 años con pirosis nocturna que interrumpe el sueño 3-4 veces por semana. Refiere alivio insuficiente con IBP tomado en ayuno.",
-    pregunta: "¿Qué ventaja del P-CAB es más relevante para este perfil de síntoma nocturno?",
+    caso: "La endoscopia del paciente confirma esofagitis por reflujo grado B (clasificación de Los Ángeles). Se decide iniciar tratamiento con tegoprazán.",
+    pregunta: "¿Cuánto tiempo se dará el tratamiento para la esofagitis leve grado B?",
     opciones: {
-      A: "Requiere ayuno estricto de 30 min antes de cada toma.",
-      B: "Control ácido sostenido por 24 h, incluida la noche.",
-      C: "Efecto que aparece tras 3-5 días de tratamiento.",
-      D: "Debe tomarse varias veces al día para sostener el efecto."
+      A: "Tegoprazán 50 mg cada 12 horas por 2 meses.",
+      B: "Tegoprazán 50 mg cada 24 horas por 2 meses y a demanda.",
+      C: "Tegoprazán 50 mg cada 24 horas por 2 meses y después mantenimiento 25 mg cada 24 horas.",
+      D: "Tegoprazán 50 mg, 30 minutos a 1 hora antes del desayuno, cada 24 horas por 2 meses."
     },
     correcta: "B",
-    mensaje_clave: "Control 24 h: cobertura del ácido nocturno con una sola toma.",
+    mensaje_clave: "Esofagitis leve grado B: tratamiento de inducción y luego a demanda — y el tegoprazán alivia desde los primeros 30 minutos.",
     evidencia: {
-      titulo: "Control nocturno del ácido",
+      titulo: "Tratamiento de ERGE / esofagitis (guía AMG)",
       puntos: [
-        "La hiperacidez nocturna es una limitación frecuente de los IBP.",
-        "El P-CAB mantiene el control del pH a lo largo de 24 h con una toma diaria.",
-        "Se puede tomar con o sin alimentos, a cualquier hora."
+        "En ERNE: P-CAB o IBP una vez al día por 4 semanas; luego tratamiento intermitente o a demanda.",
+        "En esofagitis: tegoprazán una vez al día por 8 semanas (IBP dos veces al día).",
+        "Ventaja del tegoprazán: actúa a partir de los primeros 30 minutos.",
+        "Mantenimiento: a la dosis con que se controlen los síntomas (mitad de dosis, 25 mg, en grados C y D)."
       ]
     },
-    validado: false
+    fuentes: [
+      "Valdovinos M.A. Recomendaciones de buena práctica clínica en el diagnóstico y tratamiento de la enfermedad por reflujo gastroesofágico. Revisión por expertos de la Asociación Mexicana de Gastroenterología. Rev Gastroenterol Méx. 2024;89:121-143."
+    ],
+    validado: true
   },
   {
     id: 3,
-    caso: "Hombre de 52 años inicia tratamiento por ERGE. Pregunta cuándo va a notar alivio porque tiene un viaje en 2 días.",
-    pregunta: "Respecto al inicio de acción del P-CAB (tegoprazán), lo correcto es:",
+    caso: "Se confirma infección por Helicobacter pylori en el paciente. México es una región con alta resistencia a claritromicina.",
+    pregunta: "¿Cuál sería un esquema adecuado de erradicación de H. pylori basado en tegoprazán en regiones como México con alta resistencia a claritromicina?",
     opciones: {
-      A: "Alivio rápido, alrededor de los 30 min desde la primera toma.",
-      B: "Alivio progresivo a partir del día 5.",
-      C: "Sin efecto hasta alcanzar estado estacionario en 1 semana.",
-      D: "Solo es eficaz si se combina con un antiácido."
+      A: "Terapia triple con claritromicina: tegoprazán 50 mg c/12 h + claritromicina 500 mg c/12 h + amoxicilina 1 g c/12 h por 14 días.",
+      B: "Terapia cuádruple con bismuto: tegoprazán 50 mg c/12 h + doxiciclina 100 mg c/12 h + subsalicilato de bismuto 300 mg c/6 h + metronidazol 500 mg c/8 h por 14 días.",
+      C: "Terapia dual a altas dosis: tegoprazán 50 mg c/12 h + amoxicilina 1 g c/8 h por 14 días."
     },
-    correcta: "A",
-    mensaje_clave: "Rapidez: alivio ~30 min desde la primera toma.",
+    correcta: ["B", "C"],
+    mensaje_clave: "En zonas con alta resistencia a claritromicina, prefiere esquemas sin claritromicina (cuádruple con bismuto o dual a altas dosis) con tegoprazán.",
     evidencia: {
-      titulo: "Rapidez de inicio de acción",
+      titulo: "Erradicación de H. pylori (consenso mexicano)",
       puntos: [
-        "El P-CAB no depende de activación ácida progresiva como el IBP.",
-        "Inicio de acción rápido (~30 min) desde la primera dosis.",
-        "Útil cuando el paciente necesita alivio temprano y predecible."
+        "En regiones con alta resistencia a claritromicina, evita la terapia triple con claritromicina.",
+        "Primera línea: cuádruple con bismuto (14 días) o cuádruple sin bismuto / concomitante (14 días), con IBP o P-CAB.",
+        "Si falla y no hay pruebas de susceptibilidad: cuádruple con bismuto (si no se usó antes) o terapia dual a altas dosis (P-CAB + amoxicilina).",
+        "El tegoprazán (P-CAB) eleva y sostiene el pH, mejorando la eficacia de los antibióticos."
       ]
     },
-    validado: false
+    fuentes: [
+      "J.M. Remes-Troche et al. V consenso mexicano sobre el diagnóstico y tratamiento de la infección por Helicobacter pylori. Rev Gastroenterol Méx. 2026;91:89-114."
+    ],
+    validado: true
+  },
+  {
+    id: 4,
+    caso: "Tras completar el tratamiento erradicador de H. pylori, el paciente mejora significativamente de la epigastralgia.",
+    pregunta: "¿Cuál es el siguiente paso recomendado para confirmar el éxito terapéutico?",
+    opciones: {
+      A: "Repetir endoscopia digestiva alta inmediatamente.",
+      B: "Solicitar serología IgG para H. pylori.",
+      C: "Realizar prueba de aliento o antígeno en heces al menos 4 semanas después de terminar antibióticos y subsalicilato de bismuto; suspender el tegoprazán 2 semanas antes.",
+      D: "Tratamiento con tegoprazán por 3 meses adicionales."
+    },
+    correcta: "C",
+    mensaje_clave: "Confirma la erradicación con prueba NO invasiva (aliento o antígeno en heces), al menos 4 semanas tras terminar el tratamiento.",
+    evidencia: {
+      titulo: "Confirmación de erradicación (consenso mexicano)",
+      puntos: [
+        "La confirmación de erradicación de H. pylori se hace con una prueba NO invasiva.",
+        "Válidas: prueba de aliento con urea C13/C14 o antígeno en heces.",
+        "Realizarlas al menos 4 semanas después de completar el tratamiento de erradicación.",
+        "Calidad de la evidencia: A · Fuerza de la recomendación: fuerte a favor."
+      ]
+    },
+    fuentes: [
+      "J.M. Remes-Troche et al. V consenso mexicano sobre el diagnóstico y tratamiento de la infección por Helicobacter pylori. Rev Gastroenterol Méx. 2026;91:89-114."
+    ],
+    validado: true
   }
 ];

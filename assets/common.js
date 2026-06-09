@@ -10,6 +10,12 @@ const STATES = ["lobby","cortinilla","pregunta","opciones","responder","bloqueo"
 
 const OPT_COLORS = { A:"#21c17a", B:"#2f86eb", C:"#e8554d", D:"#f2b53b" };
 
+/* Soporte de opciones variables (3 o 4) y respuesta única o múltiple */
+function opcionKeys(c){ return Object.keys(c.opciones || {}); }
+function correctSet(c){ return Array.isArray(c.correcta) ? c.correcta : [c.correcta]; }
+function esCorrecta(c, k){ return k != null && correctSet(c).includes(k); }
+function correctasTexto(c){ return correctSet(c).join(" y "); }
+
 /* Puntaje: base por acierto + bonus de velocidad (fracción de tiempo restante) */
 const PTS_BASE = 100;
 const PTS_VELOCIDAD_MAX = 50;   // bonus máximo por responder al instante
