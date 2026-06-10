@@ -58,6 +58,7 @@
     <div class="brand">🎛️ Control <span class="kc">· Partido de la Evidencia</span></div>
     <span class="tag" id="conn">···</span>
   </div>
+  <div id="ponenteTag" style="text-align:center;font-weight:800;font-size:14px;background:rgba(25,195,214,.14);border:1px solid rgba(25,195,214,.4);border-radius:10px;padding:8px"></div>
   <div class="statebox">
     <div class="tag">Estado actual</div>
     <div class="st" id="stName">—</div>
@@ -196,6 +197,9 @@ function exportar(){
 }
 
 function render(){
+  document.getElementById("ponenteTag").textContent = EV.ponente
+    ? ("🎤 Ponente: " + (EV.ponente==="villar"?"Dra. Villar":"Dr. Cerda"))
+    : "🎤 Ponente: sin seleccionar (elígelo antes de iniciar)";
   document.getElementById("stName").textContent = ST_NOMBRE[EV.estado]||EV.estado;
   document.getElementById("stCaso").textContent =
     (EV.estado==="lobby"||EV.estado==="final")?"":("Caso "+(EV.caso_actual||1)+" de "+CASOS.length);
@@ -212,11 +216,16 @@ function render(){
     b.className="btn lg wide"+(cls?(" "+cls):""); b.textContent=label; b.onclick=fn; a.appendChild(b); }
   switch(EV.estado){
     case "lobby":
+      if(!EV.ponente){
+        add("👤 Elegir ponente: Dra. Villar", ()=>db.ref("evento/ponente").set("villar"), "ghost");
+        add("👤 Elegir ponente: Dr. Cerda", ()=>db.ref("evento/ponente").set("cerda"), "ghost");
+      } else {
+        const nom = EV.ponente==="villar" ? "Dra. Villar" : "Dr. Cerda";
+        add(EV.presentacion ? "⏹️ Detener presentación" : ("🎤 Reproducir presentación · "+nom),
+            ()=>db.ref("evento/presentacion").set(EV.presentacion?null:EV.ponente), "teal");
+        add("🔁 Cambiar ponente", ()=>{ db.ref("evento/presentacion").set(null); db.ref("evento/ponente").set(null); }, "ghost");
+      }
       add("▶️ Iniciar partido", ()=>setEstado("cortinilla"));
-      add(EV.presentacion==="villar"?"⏹️ Detener presentación":"🎤 Presentación Dra. Villar",
-          ()=>db.ref("evento/presentacion").set(EV.presentacion==="villar"?null:"villar"), "ghost");
-      add(EV.presentacion==="cerda"?"⏹️ Detener presentación":"🎤 Presentación Dr. Cerda",
-          ()=>db.ref("evento/presentacion").set(EV.presentacion==="cerda"?null:"cerda"), "ghost");
       break;
     case "cortinilla": add("Mostrar pregunta →", ()=>setEstado("pregunta")); break;
     case "pregunta":   add("Mostrar opciones →", ()=>setEstado("opciones")); break;
