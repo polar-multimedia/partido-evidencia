@@ -26,6 +26,10 @@
   #loopfull{position:fixed;inset:0;z-index:55;background:#000;display:none}
   #loopfull.show{display:block}
   #loopfull video{width:100%;height:100%;object-fit:cover}
+  #presenta{position:fixed;inset:0;z-index:54;background:#000;display:none;align-items:center;justify-content:center}
+  #presenta.show{display:flex}
+  #presenta video{width:100%;height:100%;object-fit:cover}
+  #presenta .pendiente{color:#fff;font-size:30px}
   #stage{position:fixed;inset:0;display:flex;flex-direction:column}
   /* scoreboard superior */
   #scoreboard{display:flex;align-items:center;justify-content:space-between;gap:20px;
@@ -46,9 +50,11 @@
   .casebox .lbl{font-size:14px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);font-weight:800}
   .casebox .ctext{font-size:30px;line-height:1.35;margin:8px 0 22px}
   .casebox .q{font-size:34px;font-weight:800;line-height:1.25}
-  .opts{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:1100px;width:100%;margin-top:24px}
-  .opts .opt{font-size:22px;padding:20px;cursor:default}
-  .opts .opt .k{width:48px;height:48px;font-size:24px}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:1240px;width:100%;margin-top:26px}
+  .opts .opt{font-size:27px;padding:24px 24px;cursor:default;line-height:1.3;align-items:flex-start}
+  .opts .opt .k{width:54px;height:54px;font-size:27px;flex:0 0 auto}
+  .casebox .q{font-size:40px;line-height:1.3}
+  .casebox .ctext{font-size:32px;line-height:1.4}
   #timer{font-size:120px}
   .countbar{margin-top:26px;font-size:24px;color:var(--muted)}
   .msgkey{margin-top:22px;background:rgba(140,224,33,.12);border:1px solid rgba(140,224,33,.4);
@@ -102,6 +108,7 @@
 <div id="qroverlay"></div>
 <div id="musica"></div>
 <div id="loopfull"><video id="loopfullvid" src="../assets/loop.mp4" autoplay loop muted playsinline></video></div>
+<div id="presenta"></div>
 <div id="reactions"></div>
 <div id="cfgnote"></div>
 
@@ -140,7 +147,8 @@ const silbato = new Audio("../assets/silbato.mp3");
 silbato.preload = "auto";
 const reloj = new Audio("../assets/reloj.mp3");
 reloj.preload = "auto"; reloj.loop = true;
-let lastWhistleState = null;
+let lastWhistleState = null, varTimer = null, alarmTimer = null;
+const WHISTLE = '<svg viewBox="0 0 64 40" width="78" height="48" style="vertical-align:-10px;margin-right:8px"><path fill="#f2b53b" d="M2 12h26l12-7v10h16a7 7 0 0 1 0 14H40v9l-12-7H22A18 18 0 1 1 2 12z"/><circle cx="22" cy="22" r="9" fill="#0a0e15"/></svg>';
 cortvid.addEventListener("error", ()=>cortvid.classList.remove("show"));  // si falla, cae a cortinilla CSS
 cortvid.addEventListener("ended", ()=>{ /* mantiene último cuadro hasta que el operador avance */ });
 
@@ -192,11 +200,10 @@ function stopCortinilla(){ if(cortvid.classList.contains("show")){ cortvid.class
 function casoActual(){ return CASOS.find(c => c.id === (STATE.evento.caso_actual||1)) || CASOS[0]; }
 function jugadoresPorEquipo(eq){ return Object.values(STATE.jugadores||{}).filter(j=>j.equipo===eq).length; }
 
+function golesEquipo(eq){ return (STATE.equipos[eq]||{}).goles || 0; }
 function pintarScore(){
-  const r = puntajeNormalizado((STATE.equipos.rapido||{}).puntaje||0, jugadoresPorEquipo("rapido"));
-  const c = puntajeNormalizado((STATE.equipos.control||{}).puntaje||0, jugadoresPorEquipo("control"));
-  document.getElementById("sRapido").textContent = r;
-  document.getElementById("sControl").textContent = c;
+  document.getElementById("sRapido").textContent = "⚽ " + golesEquipo("rapido");
+  document.getElementById("sControl").textContent = golesEquipo("control") + " ⚽";
   const e = STATE.evento.estado;
   casoLbl.textContent = (e==="lobby"||e==="final") ? (e==="final"?"Marcador final":"Esperando jugadores")
     : ("Caso " + (STATE.evento.caso_actual||1));
@@ -251,6 +258,20 @@ function renderLoopFull(){
   if(STATE.evento.loop_full){ o.classList.add("show"); const v=document.getElementById("loopfullvid"); if(v&&v.paused) v.play().catch(()=>{}); }
   else o.classList.remove("show");
 }
+function renderPresenta(){
+  const o = document.getElementById("presenta");
+  const p = STATE.evento.presentacion;
+  if(p==="villar" || p==="cerda"){
+    const file = p==="villar" ? "presentacion-villar.mp4" : "presentacion-cerda.mp4";
+    if(o.dataset.file!==file){
+      o.dataset.file=file;
+      o.innerHTML = `<video src="../assets/${file}" autoplay playsinline
+        onerror="this.outerHTML='<div class=\\'pendiente\\'>Video de presentación pendiente</div>'"></video>`;
+    }
+    o.classList.add("show");
+    const v=o.querySelector("video"); if(v&&v.paused) v.play().catch(()=>{});
+  } else { o.classList.remove("show"); o.innerHTML=""; o.dataset.file=""; }
+}
 function render(){
   pintarScore();
   const e = STATE.evento.estado || "lobby";
@@ -263,10 +284,14 @@ function render(){
   // sonido de reloj durante la cuenta regresiva
   if(e==="responder"){ if(reloj.paused){ reloj.currentTime=0; reloj.play().catch(()=>{}); } }
   else { if(!reloj.paused){ reloj.pause(); reloj.currentTime=0; } }
+  // VAR automático: 5s después de mostrar el resultado (siempre se muestra)
+  if(e==="resultado"){ if(!varTimer) varTimer=setTimeout(()=>{ varTimer=null; if(STATE.evento.estado==="resultado") db.ref("evento/estado").set("var"); }, 5000); }
+  else if(varTimer){ clearTimeout(varTimer); varTimer=null; }
   renderCtxOverlay();
   renderQrOverlay();
   renderMusica();
   renderLoopFull();
+  renderPresenta();
   const c = casoActual();
   if(timerInt){ clearInterval(timerInt); timerInt=null; }
 
@@ -311,8 +336,8 @@ function render(){
         html += `<div class="big pop" style="font-size:50px">Jugada pareja — sin gol</div>`;
       }
     }
-    else if(e==="bloqueo"){ html += `<div class="big pop" style="font-size:52px">🔔 ¡Tiempo!</div>`; }
-    else { html += `<div class="q" style="font-size:30px;font-weight:800;max-width:1100px">${escapeHTML(c.pregunta)}</div>`; }
+    else if(e==="bloqueo"){ html += `<div class="big pop" style="font-size:54px">${WHISTLE}¡Tiempo!</div>`; }
+    else { html += `<div class="q" style="font-size:40px;font-weight:800;max-width:1180px;line-height:1.3;letter-spacing:.005em">${escapeHTML(c.pregunta)}</div>`; }
     if(showTimer){ html += `<div id="timer" class="timer">--</div>`; }
     html += `<div class="opts">` + opcionKeys(c).map(k=>{
       const isCorrect = reveal && esCorrecta(c,k);
@@ -405,7 +430,12 @@ fbOnReady(()=>{
   db.ref("equipos").on("value", s => { STATE.equipos = s.val() || {}; render(); });
   db.ref("jugadores").on("value", s => { STATE.jugadores = s.val() || {}; if(STATE.evento.estado!=="responder") render(); });
   db.ref("respuestas").on("value", s => { STATE.respuestas = s.val() || {}; });
-  db.ref("var_solicitudes").on("value", s => { STATE.var_solicitudes = s.val() || {}; if(STATE.evento.estado==="resultado") render(); });
+  db.ref("var_solicitudes").on("value", s => {
+    STATE.var_solicitudes = s.val() || {};
+    if(Object.keys(STATE.var_solicitudes).length){ if(!alarmTimer) alarmTimer=setTimeout(()=>{ alarmTimer=null; db.ref("var_solicitudes").remove(); }, 10000); }
+    else if(alarmTimer){ clearTimeout(alarmTimer); alarmTimer=null; }
+    if(STATE.evento.estado==="resultado") render();
+  });
   db.ref("reacciones").limitToLast(1).on("child_added", s => {
     if(s.key===lastReactKey) return; lastReactKey=s.key;
     const v = s.val(); if(v && v.emoji) floatReaction(v.emoji);
