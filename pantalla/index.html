@@ -32,6 +32,9 @@
   #presenta.show{display:flex}
   #presenta video{width:100%;height:100%;object-fit:cover}
   #presenta .pendiente{color:#fff;font-size:30px}
+  #empate{position:fixed;inset:0;z-index:56;background:#000;display:none}
+  #empate.show{display:block}
+  #empate video{width:100%;height:100%;object-fit:cover}
   #stage{position:fixed;inset:0;display:flex;flex-direction:column}
   /* scoreboard superior */
   #scoreboard{display:flex;align-items:center;justify-content:space-between;gap:20px;
@@ -111,6 +114,7 @@
 <div id="musica"></div>
 <div id="loopfull"><video id="loopfullvid" src="../assets/loop.mp4" autoplay loop muted playsinline></video></div>
 <div id="presenta"></div>
+<div id="empate"></div>
 <div id="reactions"></div>
 <div id="cfgnote"></div>
 
@@ -296,6 +300,14 @@ function renderPresenta(){
     const v=o.querySelector("video"); if(v&&v.paused) v.play().catch(()=>{});
   } else { o.classList.remove("show"); o.innerHTML=""; o.dataset.file=""; }
 }
+function renderEmpate(){
+  const o = document.getElementById("empate");
+  if(STATE.evento.empate){
+    if(o.dataset.on!=="1"){ o.dataset.on="1"; o.innerHTML=`<video src="../assets/empate.mp4" autoplay playsinline></video>`; }
+    o.classList.add("show");
+    const v=o.querySelector("video"); if(v&&v.paused) v.play().catch(()=>{});
+  } else { o.classList.remove("show"); o.innerHTML=""; o.dataset.on=""; }
+}
 function render(){
   pintarScore();
   const e = STATE.evento.estado || "lobby";
@@ -316,6 +328,7 @@ function render(){
   renderMusica();
   renderLoopFull();
   renderPresenta();
+  renderEmpate();
   const c = casoActual();
   if(timerInt){ clearInterval(timerInt); timerInt=null; }
 

@@ -254,6 +254,8 @@ function render(){
       ()=>db.ref("evento/musica").set(!EV.musica), "ghost mini");
   add(EV.loop_full?"⏹️ Detener loop":"🎬 Lanzar loop (sin sonido)",
       ()=>db.ref("evento/loop_full").set(!EV.loop_full), "ghost mini");
+  add(EV.empate?"⏹️ Detener 'Vamos a penales'":"🥅 Vamos a penales (video)",
+      ()=>db.ref("evento/empate").set(!EV.empate), "ghost mini");
   const cm = casoMod();
   if(cm && ((cm.contexto_media&&cm.contexto_media.length) || cm.imagen || (cm.caso||"").trim())){
     add(EV.mostrar_contexto?"🙈 Ocultar contexto":"👁 Ver contexto", toggleContexto, "ghost mini");
