@@ -45,6 +45,8 @@
   .actions .btn.ghost{background:rgba(15,22,32,.92);border:1px solid #34485e;color:#fff;box-shadow:none}
   .actions .btn.ghost:hover{border-color:var(--teal)}
   .actions .btn.mini{font-size:15px;padding:13px 16px}
+  .actions .btn.primary{font-size:26px;padding:26px 22px;box-shadow:0 8px 28px rgba(140,224,33,.35);margin-bottom:4px}
+  .actions .sep{height:1px;background:var(--line);margin:6px 0 2px}
   .statebox{background:rgba(18,26,38,.94)}
   .statebox .st{font-size:28px}
   .stat{background:rgba(15,22,32,.92)}
@@ -214,47 +216,53 @@ function render(){
   const a=document.getElementById("actions"); a.innerHTML="";
   function add(label, fn, cls){ const b=document.createElement("button");
     b.className="btn lg wide"+(cls?(" "+cls):""); b.textContent=label; b.onclick=fn; a.appendChild(b); }
+  function addP(label, fn, cls){ add(label, fn, "primary"+(cls?(" "+cls):"")); }
+  function sep(){ const d=document.createElement("div"); d.className="sep"; a.appendChild(d); }
+
+  // 1) BOTÓN PRINCIPAL (siempre primero, el más vistoso)
   switch(EV.estado){
-    case "lobby":
-      if(!EV.ponente){
-        add("👤 Elegir ponente: Dra. Villar", ()=>db.ref("evento/ponente").set("villar"), "ghost");
-        add("👤 Elegir ponente: Dr. Cerda", ()=>db.ref("evento/ponente").set("cerda"), "ghost");
-      } else {
-        const nom = EV.ponente==="villar" ? "Dra. Villar" : "Dr. Cerda";
-        add(EV.presentacion ? "⏹️ Detener presentación" : ("🎤 Reproducir presentación · "+nom),
-            ()=>db.ref("evento/presentacion").set(EV.presentacion?null:EV.ponente), "teal");
-        add("🔁 Cambiar ponente", ()=>{ db.ref("evento/presentacion").set(null); db.ref("evento/ponente").set(null); }, "ghost");
-      }
-      add("▶️ Iniciar partido", ()=>setEstado("cortinilla"));
-      break;
-    case "cortinilla": add("Mostrar pregunta →", ()=>setEstado("pregunta")); break;
-    case "pregunta":   add("Mostrar opciones →", ()=>setEstado("opciones")); break;
-    case "opciones":   add("⏱ Iniciar cronómetro", abrirRespuestas, "teal"); break;
-    case "responder":  add("🔔 Cerrar tiempo (silbato)", cerrarTiempo); break;
-    case "bloqueo":    add("Revelar resultado ⚽", revelar); break;
-    case "resultado":
-      add("🟥 Ir al VAR", ()=>setEstado("var"), "ghost");
-      add(esUltimo()?"🏁 Finalizar partido":"Siguiente caso →", siguiente, "teal"); break;
-    case "var":
-      add(esUltimo()?"🏁 Finalizar partido":"Siguiente caso →", siguiente, "teal"); break;
-    case "final":
-      add("👋 Reproducir despedida →", ()=>setEstado("despedida"), "teal");
-      add("🔄 Nuevo partido (reiniciar)", reiniciar, "ghost danger"); break;
-    case "despedida":
-      add("🔄 Nuevo partido (reiniciar)", reiniciar, "ghost danger"); break;
+    case "lobby":      addP("▶️ Iniciar partido", ()=>setEstado("cortinilla")); break;
+    case "cortinilla": addP("Mostrar pregunta →", ()=>setEstado("pregunta")); break;
+    case "pregunta":   addP("Mostrar opciones →", ()=>setEstado("opciones")); break;
+    case "opciones":   addP("⏱ Iniciar cronómetro", abrirRespuestas); break;
+    case "responder":  addP("Cerrar tiempo (silbato)", cerrarTiempo); break;
+    case "bloqueo":    addP("Revelar resultado ⚽", revelar); break;
+    case "resultado":  addP("🟥 Ir al VAR", ()=>setEstado("var")); break;
+    case "var":        addP(esUltimo()?"🏁 Finalizar partido":"Siguiente pregunta →", siguiente); break;
+    case "final":      addP("👋 Reproducir despedida →", ()=>setEstado("despedida")); break;
+    case "despedida":  addP("🔄 Nuevo partido (reiniciar)", reiniciar, "danger"); break;
   }
+  // Atrás (deshacer) justo bajo el principal
+  if(ATRAS[EV.estado]){ add("↩️ Atrás (undo)", atras, "ghost mini"); }
+
+  sep();
+  // 2) Selección / presentación del ponente (solo en lobby)
+  if(EV.estado==="lobby"){
+    if(!EV.ponente){
+      add("👤 Elegir ponente: Dra. Villar", ()=>db.ref("evento/ponente").set("villar"), "ghost");
+      add("👤 Elegir ponente: Dr. Cerda", ()=>db.ref("evento/ponente").set("cerda"), "ghost");
+    } else {
+      const nom = EV.ponente==="villar" ? "Dra. Villar" : "Dr. Cerda";
+      add(EV.presentacion ? "⏹️ Detener presentación" : ("🎤 Reproducir presentación · "+nom),
+          ()=>db.ref("evento/presentacion").set(EV.presentacion?null:EV.ponente), "ghost mini");
+    }
+  }
+  // 3) Lanzadores secundarios (siempre disponibles, en chico)
   add(EV.mostrar_qr?"🙈 Ocultar QR":"📲 Mostrar QR de acceso",
-      ()=>db.ref("evento/mostrar_qr").set(!EV.mostrar_qr), "ghost");
+      ()=>db.ref("evento/mostrar_qr").set(!EV.mostrar_qr), "ghost mini");
   add(EV.musica?"⏹️ Detener video musical":"🎵 Lanzar video musical",
-      ()=>db.ref("evento/musica").set(!EV.musica), "ghost");
+      ()=>db.ref("evento/musica").set(!EV.musica), "ghost mini");
   add(EV.loop_full?"⏹️ Detener loop":"🎬 Lanzar loop (sin sonido)",
-      ()=>db.ref("evento/loop_full").set(!EV.loop_full), "ghost");
+      ()=>db.ref("evento/loop_full").set(!EV.loop_full), "ghost mini");
   const cm = casoMod();
   if(cm && (cm.imagen || (cm.caso||"").trim())){
-    add(EV.mostrar_contexto?"🙈 Ocultar contexto":"👁 Ver contexto", toggleContexto, "ghost");
+    add(EV.mostrar_contexto?"🙈 Ocultar contexto":"👁 Ver contexto", toggleContexto, "ghost mini");
   }
-  if(ATRAS[EV.estado]){ const bb=document.createElement("button");
-    bb.className="btn ghost wide mini"; bb.textContent="↩️ Atrás (undo)"; bb.onclick=atras; a.appendChild(bb); }
+  // 4) Cambiar ponente: hasta abajo (solo en lobby con ponente)
+  if(EV.estado==="lobby" && EV.ponente){
+    sep();
+    add("🔁 Cambiar ponente", ()=>{ db.ref("evento/presentacion").set(null); db.ref("evento/ponente").set(null); }, "ghost mini");
+  }
 }
 
 fbOnReady(()=>{
