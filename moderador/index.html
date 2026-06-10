@@ -255,7 +255,7 @@ function render(){
   add(EV.loop_full?"⏹️ Detener loop":"🎬 Lanzar loop (sin sonido)",
       ()=>db.ref("evento/loop_full").set(!EV.loop_full), "ghost mini");
   const cm = casoMod();
-  if(cm && (cm.imagen || (cm.caso||"").trim())){
+  if(cm && ((cm.contexto_media&&cm.contexto_media.length) || cm.imagen || (cm.caso||"").trim())){
     add(EV.mostrar_contexto?"🙈 Ocultar contexto":"👁 Ver contexto", toggleContexto, "ghost mini");
   }
   // 4) Cambiar ponente: hasta abajo (solo en lobby con ponente)
