@@ -25,6 +25,7 @@
   #musica{position:fixed;inset:0;z-index:52;background:#000;display:none}
   #musica.show{display:block}
   #musica iframe{width:100%;height:100%;border:0}
+  #musica video{width:100%;height:100%;object-fit:cover}
   #loopfull{position:fixed;inset:0;z-index:55;background:#000;display:none}
   #loopfull.show{display:block}
   #loopfull video{width:100%;height:100%;object-fit:cover}
@@ -144,7 +145,7 @@ let lastReactKey = null, timerInt = null, autoClosed = false;
 /* ---- Cortinillas de video (precarga + audio) ---- */
 const CORT_URLS = {};   // archivo -> blob URL tras precargar
 const DESPEDIDA = "despedida.mp4";
-function cortFiles(){ return [...new Set([...CASOS.map(c=>c.cortinilla), DESPEDIDA].filter(Boolean))]; }
+function cortFiles(){ return [...new Set([...CASOS.map(c=>c.cortinilla), DESPEDIDA, "musica.mp4"].filter(Boolean))]; }
 function cortPath(f){ return "../assets/"+f; }
 let PREPARED = false;
 const cortvid = document.getElementById("cortvid");
@@ -272,11 +273,12 @@ function renderMusica(){
   const o = document.getElementById("musica");
   if(STATE.evento.musica){
     if(o.dataset.on!=="1"){
-      o.innerHTML = `<iframe src="https://player.vimeo.com/video/1199836067?autoplay=1&title=0&byline=0&portrait=0&dnt=1"
-        allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
-      o.dataset.on = "1";
+      o.dataset.on="1";
+      const src = CORT_URLS["musica.mp4"] || "../assets/musica.mp4";
+      o.innerHTML = `<video src="${src}" autoplay loop playsinline></video>`;
     }
     o.classList.add("show");
+    const v=o.querySelector("video"); if(v&&v.paused) v.play().catch(()=>{});
   } else {
     o.classList.remove("show"); o.innerHTML=""; o.dataset.on="";
   }
