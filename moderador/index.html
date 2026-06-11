@@ -106,7 +106,7 @@ function casoMod(){ return CASOS.find(x=>x.id===(EV.caso_actual||1)) || CASOS[0]
 function preg(){ return enPenales() ? (PENALES[(EV.penal||1)-1]) : casoMod(); }
 function qKey(){ return enPenales() ? ("P"+(EV.penal||1)) : (EV.caso_actual||1); }
 function setEstado(e, extra){ if(ready) db.ref("evento").update(Object.assign({estado:e, mostrar_contexto:false, mostrar_qr:false, presentacion:null}, extra||{})); }
-function toggleContexto(){ if(ready) db.ref("evento/mostrar_contexto").set(!EV.mostrar_contexto); }
+function toggleContexto(){ if(ready) db.ref("evento").update({ mostrar_contexto:!EV.mostrar_contexto, ctx_slide:0 }); }
 
 function abrirRespuestas(){
   const dur = Math.max(5, parseInt(document.getElementById("dur").value)||25);
@@ -296,6 +296,11 @@ function render(){
   const cm = casoMod();
   if(!enPenales() && cm && ((cm.contexto_media&&cm.contexto_media.length) || cm.imagen || (cm.caso||"").trim())){
     add(EV.mostrar_contexto?"🙈 Ocultar contexto":"👁 Ver contexto", toggleContexto, "ghost mini");
+    const nSlides=(cm.contexto_media||[]).length;
+    if(EV.mostrar_contexto && nSlides>1){
+      const cur=(EV.ctx_slide||0);
+      add("🖼️ Contexto "+(cur+1)+"/"+nSlides+" — siguiente slide →", ()=>db.ref("evento/ctx_slide").set((cur+1)%nSlides), "ghost mini");
+    }
   }
   // 4) Cambiar ponente: hasta abajo (solo en lobby con ponente)
   if(EV.estado==="lobby" && EV.ponente){

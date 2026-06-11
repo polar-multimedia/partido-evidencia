@@ -228,10 +228,9 @@ function nRespuestas(){
 function nConectados(){ return Object.values(STATE.jugadores||{}).filter(j=>j.conectado!==false).length; }
 
 const IDLE_STATES = ["lobby","cortinilla","cierre","final"];
-let ctxIdx = 0, ctxInt = null;
-function paintCtxSlide(media){
+function paintCtxSlideIdx(media, idx){
   const s = document.querySelector("#ctxoverlay .ctxslide"); if(!s) return;
-  const m = media[ctxIdx] || media[0];
+  const m = media[idx] || media[0];
   s.innerHTML = m.type==="video"
     ? `<video src="../assets/${m.src}" autoplay loop muted playsinline></video>`
     : `<img src="../assets/${m.src}" alt="">`;
@@ -241,20 +240,15 @@ function renderCtxOverlay(){
   const c = casoActual();
   const media = c && c.contexto_media;
   const has = STATE.evento.mostrar_contexto && c && ((media&&media.length) || c.imagen || (c.caso||"").trim());
-  if(!has){ o.classList.remove("show"); o.innerHTML=""; o.dataset.on=""; if(ctxInt){clearInterval(ctxInt);ctxInt=null;} return; }
+  if(!has){ o.classList.remove("show"); o.innerHTML=""; o.dataset.on=""; o.dataset.idx=""; return; }
   if(media && media.length){
-    if(o.dataset.on!=="carousel"){
-      o.dataset.on="carousel"; ctxIdx=0;
-      o.innerHTML = `<div class="ctxslide"></div>`;
-      paintCtxSlide(media);
-      if(ctxInt) clearInterval(ctxInt);
-      if(media.length>1) ctxInt=setInterval(()=>{ ctxIdx=(ctxIdx+1)%media.length; paintCtxSlide(media); }, 7000);
-    }
+    const idx = Math.min(STATE.evento.ctx_slide||0, media.length-1);
+    if(o.dataset.on!=="carousel"){ o.dataset.on="carousel"; o.dataset.idx=""; o.innerHTML = `<div class="ctxslide"></div>`; }
+    if(o.dataset.idx!==String(idx)){ o.dataset.idx=String(idx); paintCtxSlideIdx(media, idx); }   // avanza solo cuando el operador cambia el slide
     o.classList.add("show");
     return;
   }
-  if(ctxInt){clearInterval(ctxInt);ctxInt=null;}
-  o.dataset.on="txt";
+  o.dataset.on="txt"; o.dataset.idx="";
   o.innerHTML = `<div class="casebox pop">
       <div class="lbl">Contexto · Caso ${STATE.evento.caso_actual}</div>
       ${(c.caso||"").trim() ? `<div class="ctext">${escapeHTML(c.caso)}</div>` : ""}
