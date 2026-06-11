@@ -205,19 +205,24 @@ function playVideo(file){
 function stopCortinilla(){ if(cortvid.classList.contains("show")){ cortvid.classList.remove("show"); cortvid.pause(); cortvid.dataset.file=""; } }
 
 function casoActual(){ return CASOS.find(c => c.id === (STATE.evento.caso_actual||1)) || CASOS[0]; }
+function enPenalesP(){ return STATE.evento.modo==="penales"; }
+function preguntaActual(){ return enPenalesP() ? (PENALES[(STATE.evento.penal||1)-1]) : casoActual(); }
+function qKeyP(){ return enPenalesP() ? ("P"+(STATE.evento.penal||1)) : (STATE.evento.caso_actual||1); }
 function jugadoresPorEquipo(eq){ return Object.values(STATE.jugadores||{}).filter(j=>j.equipo===eq).length; }
 
-function golesEquipo(eq){ return (STATE.equipos[eq]||{}).goles || 0; }
+function marcadorEquipo(eq){ return enPenalesP() ? ((STATE.equipos[eq]||{}).penales||0) : ((STATE.equipos[eq]||{}).goles||0); }
 function pintarScore(){
-  document.getElementById("sRapido").textContent = "⚽ " + golesEquipo("rapido");
-  document.getElementById("sControl").textContent = golesEquipo("control") + " ⚽";
+  document.getElementById("sRapido").textContent = "⚽ " + marcadorEquipo("rapido");
+  document.getElementById("sControl").textContent = marcadorEquipo("control") + " ⚽";
   const e = STATE.evento.estado;
-  casoLbl.textContent = (e==="lobby"||e==="final") ? (e==="final"?"Marcador final":"Esperando jugadores")
+  casoLbl.textContent = (e==="lobby") ? "Esperando jugadores"
+    : (e==="final") ? "Marcador final"
+    : enPenalesP() ? ("Penal " + (STATE.evento.penal||1) + (e==="penintro"?"":(" de "+PENALES.length)))
     : ("Caso " + (STATE.evento.caso_actual||1));
 }
 
 function nRespuestas(){
-  const r = (STATE.respuestas||{})[STATE.evento.caso_actual] || {};
+  const r = (STATE.respuestas||{})[qKeyP()] || {};
   return Object.keys(r).length;
 }
 function nConectados(){ return Object.values(STATE.jugadores||{}).filter(j=>j.conectado!==false).length; }
@@ -322,8 +327,8 @@ function render(){
   // sonido de reloj durante la cuenta regresiva
   if(e==="responder"){ if(reloj.paused){ reloj.currentTime=0; reloj.play().catch(()=>{}); } }
   else { if(!reloj.paused){ reloj.pause(); reloj.currentTime=0; } }
-  // VAR automático: 5s después de mostrar el resultado (siempre se muestra)
-  if(e==="resultado"){ if(!varTimer) varTimer=setTimeout(()=>{ varTimer=null; if(STATE.evento.estado==="resultado") db.ref("evento/estado").set("var"); }, 5000); }
+  // VAR automático: 5s después de mostrar el resultado (solo en casos, no en penales)
+  if(e==="resultado" && !enPenalesP()){ if(!varTimer) varTimer=setTimeout(()=>{ varTimer=null; if(STATE.evento.estado==="resultado") db.ref("evento/estado").set("var"); }, 5000); }
   else if(varTimer){ clearTimeout(varTimer); varTimer=null; }
   renderCtxOverlay();
   renderQrOverlay();
@@ -331,7 +336,7 @@ function render(){
   renderLoopFull();
   renderPresenta();
   renderEmpate();
-  const c = casoActual();
+  const c = preguntaActual();
   if(timerInt){ clearInterval(timerInt); timerInt=null; }
 
   if(e==="lobby"){
@@ -358,8 +363,9 @@ function render(){
       <div class="muted" style="font-size:26px;margin-top:14px">Prepárate…</div>`;
   }
   else if(e==="pregunta"){
+    const lbl = enPenalesP() ? ("Penal "+(STATE.evento.penal||1)+" de "+PENALES.length) : ("Pregunta · Caso "+(STATE.evento.caso_actual||1));
     scene.innerHTML = `<div class="casebox pop">
-        <div class="lbl">Pregunta · Caso ${STATE.evento.caso_actual}</div>
+        <div class="lbl">${lbl}</div>
         <div class="q">${escapeHTML(c.pregunta)}</div></div>
       <div class="muted" style="font-size:22px;margin-top:18px">El ponente está leyendo la pregunta…</div>`;
   }
@@ -384,7 +390,15 @@ function render(){
         <span class="k ${k}">${k}</span><span>${escapeHTML(c.opciones[k])}</span></button>`;
     }).join("") + `</div>`;
     if(showTimer){ html += `<div class="countbar"><b id="cnt">0</b> de ${nConectados()} respondieron</div>`; }
-    if(reveal){ html += `<div class="msgkey pop">💊 ${escapeHTML(c.mensaje_clave)}</div>`; }
+    if(reveal){
+      if(enPenalesP()){
+        const ps = STATE.evento.penal_stats || {};
+        const row=(t,nm,col)=>{ const s=ps[t]||{aciertos:0,velocidad:0}; return `<div style="color:${col};margin:4px 0">${nm} — Aciertos <b>${s.aciertos}%</b> · Velocidad <b>${s.velocidad}%</b></div>`; };
+        html += `<div class="msgkey pop" style="font-size:26px;text-align:left">${row("rapido","⚡ Inicio Rápido","var(--teal)")}${row("control","🛡️ Control Sostenido","var(--green)")}</div>`;
+      } else {
+        html += `<div class="msgkey pop">💊 ${escapeHTML(c.mensaje_clave||"")}</div>`;
+      }
+    }
     scene.innerHTML = html;
     if(showTimer) startTimer();
     if(reveal && Object.keys(STATE.var_solicitudes||{}).length){
@@ -408,9 +422,15 @@ function render(){
   else if(e==="cierre"){
     scene.innerHTML = `<div class="big pop" style="font-size:54px">Siguiente jugada…</div>`;
   }
+  else if(e==="penintro"){
+    scene.innerHTML = `<div class="big pop" style="font-size:64px">🥅 ¡VAMOS A PENALES!</div>
+      <div class="muted" style="font-size:26px;margin-top:12px">El empate se define desde el punto penal</div>`;
+  }
   else if(e==="final"){
-    const r = puntajeNormalizado((STATE.equipos.rapido||{}).puntaje||0, jugadoresPorEquipo("rapido"));
-    const cc = puntajeNormalizado((STATE.equipos.control||{}).puntaje||0, jugadoresPorEquipo("control"));
+    let r, cc;
+    if(enPenalesP()){ r=(STATE.equipos.rapido||{}).penales||0; cc=(STATE.equipos.control||{}).penales||0; }
+    else { r=puntajeNormalizado((STATE.equipos.rapido||{}).puntaje||0, jugadoresPorEquipo("rapido"));
+           cc=puntajeNormalizado((STATE.equipos.control||{}).puntaje||0, jugadoresPorEquipo("control")); }
     const winKey = r>cc ? "rapido" : (cc>r ? "control" : null);
     let html = `<div class="tag">Marcador final</div>`;
     if(winKey){

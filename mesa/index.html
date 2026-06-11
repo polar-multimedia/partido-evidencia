@@ -106,6 +106,9 @@ let EV = { estado:"lobby", caso_actual:1 };
 let miRespuesta = null, selTeam = null, timerInt=null, lastVibSec=null, ready=false;
 
 function casoActual(){ return CASOS.find(c=>c.id===(EV.caso_actual||1)) || CASOS[0]; }
+function enPenalesM(){ return EV.modo==="penales"; }
+function preguntaActualM(){ return enPenalesM() ? (PENALES[(EV.penal||1)-1]) : casoActual(); }
+function qKeyM(){ return enPenalesM() ? ("P"+(EV.penal||1)) : (EV.caso_actual||1); }
 function chip(){
   if(!ME.equipo){ meChip.innerHTML=""; return; }
   const t = TEAMS[ME.equipo];
@@ -199,8 +202,9 @@ function renderContexto(){
 }
 /* Lectura sincronizada: el médico lee la pregunta/opciones igual que en la pantalla */
 function renderLectura(showOpts){
-  const c = casoActual();
-  let html = `<div class="mcase"><div class="lbl">Pregunta · Caso ${EV.caso_actual}</div>
+  const c = preguntaActualM();
+  const lbl = enPenalesM() ? ("Penal "+(EV.penal||1)) : ("Pregunta · Caso "+EV.caso_actual);
+  let html = `<div class="mcase"><div class="lbl">${lbl}</div>
       <div class="qq">${escapeHTML(c.pregunta)}</div></div>`;
   if(showOpts){
     html += `<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">`
@@ -213,7 +217,7 @@ function renderLectura(showOpts){
   view.innerHTML = html;
 }
 function renderResponder(){
-  const c = casoActual();
+  const c = preguntaActualM();
   view.innerHTML = `
     <div class="mcase"><div class="qq">${escapeHTML(c.pregunta)}</div></div>
     <div id="mtimer" class="timer">--</div>
@@ -235,7 +239,7 @@ function responder(k){
   const s = segRestantes(EV.cronometro);
   if(s<=0) return;
   miRespuesta = k; marcarSel();
-  if(ready) db.ref(`respuestas/${EV.caso_actual}/${window.MI_UID}`).set({ opcion:k, ts:serverNow(), nombre:ME.nombre, equipo:ME.equipo });
+  if(ready) db.ref(`respuestas/${qKeyM()}/${window.MI_UID}`).set({ opcion:k, ts:serverNow(), nombre:ME.nombre, equipo:ME.equipo });
   if(navigator.vibrate) navigator.vibrate(30);
 }
 function startTimer(){
@@ -248,7 +252,7 @@ function startTimer(){
   tick(); if(timerInt) clearInterval(timerInt); timerInt=setInterval(tick,250);
 }
 function renderResultado(){
-  const c = casoActual();
+  const c = preguntaActualM();
   const acerto = esCorrecta(c, miRespuesta);
   const sinResp = !miRespuesta;
   const corrLbl = correctSet(c).length>1 ? "Respuestas correctas" : "Respuesta correcta";
@@ -288,6 +292,7 @@ function render(){
     case "bloqueo":    watch(miRespuesta?"Respuesta enviada ✓":"No respondiste a tiempo","🔒"); break;
     case "resultado":  renderResultado(); break;
     case "var":        watch("Vamos al VAR — revisando la evidencia","🟥"); break;
+    case "penintro":   watch("¡Vamos a penales!","🥅"); break;
     case "cierre":     watch("Siguiente jugada…","➡️"); break;
     case "final":      renderFinal(); break;
     case "despedida":  renderFinal(); break;
@@ -304,17 +309,14 @@ fbOnReady(()=>{
     ref.child("conectado").onDisconnect().set(false);
   }
   db.ref("evento").on("value", s=>{
-    const prev=EV.estado; EV=s.val()||{estado:"lobby",caso_actual:1};
-    if(EV.caso_actual!== (prev&&EV.caso_actual) ){}
+    const prev=EV.estado, prevPenal=EV.penal; EV=s.val()||{estado:"lobby",caso_actual:1};
     if(EV.estado==="responder" && prev!=="responder"){ miRespuesta=null; lastVibSec=null; }
-    if(EV.estado==="cortinilla"){ miRespuesta=null; }
+    if(EV.estado==="cortinilla" || EV.estado==="penintro" || EV.penal!==prevPenal){ miRespuesta=null; }
     render();
-  });
-  // recupera mi respuesta si recargo a media pregunta
-  db.ref("evento/caso_actual").on("value", s=>{
-    const cid=s.val()||1;
-    db.ref(`respuestas/${cid}/${window.MI_UID}`).once("value").then(r=>{
-      if(r.exists()){ miRespuesta=r.val().opcion; if(EV.estado==="responder") marcarSel(); }
+    // recupera mi respuesta si recargo a media pregunta
+    const k=qKeyM();
+    db.ref(`respuestas/${k}/${window.MI_UID}`).once("value").then(r=>{
+      if(r.exists() && (EV.estado==="responder"||EV.estado==="bloqueo"||EV.estado==="resultado")){ miRespuesta=r.val().opcion; if(EV.estado==="responder") marcarSel(); }
     });
   });
 });

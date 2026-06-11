@@ -15,6 +15,20 @@
    }
    =================================================================== */
 
+/* ===== PENALES: 5 preguntas fijas (no modificar el texto) ===== */
+const PENALES = [
+  { n:1, pregunta:"¿Cuál es una ventaja de tegoprazan en comparación con los inhibidores de la bomba de protones (IBP)?",
+    opciones:{ A:"Requiere activación en medio ácido para funcionar.", B:"Tiene un inicio de acción más rápido.", C:"Debe administrarse únicamente en ayuno." }, correcta:"B" },
+  { n:2, pregunta:"¿En cuánto tiempo puede comenzar a observarse el efecto antisecretor de tegoprazan?",
+    opciones:{ A:"Desde los primeros 30 minutos a 1 hora después de su administración.", B:"Después de 3 a 5 días de uso continuo.", C:"Después de 2 semanas de tratamiento." }, correcta:"A" },
+  { n:3, pregunta:"¿Cuál de las siguientes características diferencia a tegoprazan de muchos inhibidores de la bomba de protones (IBP)?",
+    opciones:{ A:"Su eficacia depende de administrarlo estrictamente antes de los alimentos.", B:"Actúa independientemente de la ingesta de alimentos.", C:"Debe tomarse únicamente por la noche." }, correcta:"B" },
+  { n:4, pregunta:"¿Qué ventaja clínica puede ofrecer tegoprazan frente a los IBP tradicionales?",
+    opciones:{ A:"Menor control del pH gástrico durante la noche.", B:"Mayor supresión ácida desde el primer día de tratamiento.", C:"Necesidad de tomarse estrictamente 30 minutos antes de los alimentos." }, correcta:"B" },
+  { n:5, pregunta:"¿Cuál de las siguientes afirmaciones es correcta respecto al tratamiento de la esofagitis erosiva grave (Los Ángeles C/D)?",
+    opciones:{ A:"Los inhibidores de la bomba de protones siempre se administran una vez al día durante 4 semanas.", B:"En casos graves puede requerirse tratamiento con IBP dos veces al día durante 8 semanas para optimizar la cicatrización.", C:"Tegoprazan debe administrarse obligatoriamente dos veces al día durante 12 semanas." }, correcta:"B" }
+];
+
 const CASOS = [
   {
     id: 1,

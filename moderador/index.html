@@ -96,12 +96,15 @@
 <script>
 const ST_NOMBRE = {lobby:"Lobby / Registro",cortinilla:"Cortinilla",pregunta:"Pregunta (sin opciones)",
   opciones:"Opciones (lee el ponente)",responder:"Respondiendo ⏱",bloqueo:"Bloqueo",
-  resultado:"Resultado / Gol",var:"VAR de la evidencia",cierre:"Cierre",final:"Final / Campeón",despedida:"Despedida"};
+  resultado:"Resultado / Gol",var:"VAR de la evidencia",cierre:"Cierre",final:"Final / Campeón",despedida:"Despedida",penintro:"Vamos a penales"};
 let EV={estado:"lobby",caso_actual:1}, JUG={}, VARS={}, ready=false;
 
 function esUltimo(){ return (EV.caso_actual||1) >= CASOS.length; }
 function jugN(eq){ return Object.values(JUG).filter(j=>j.equipo===eq).length; }
+function enPenales(){ return EV.modo==="penales"; }
 function casoMod(){ return CASOS.find(x=>x.id===(EV.caso_actual||1)) || CASOS[0]; }
+function preg(){ return enPenales() ? (PENALES[(EV.penal||1)-1]) : casoMod(); }
+function qKey(){ return enPenales() ? ("P"+(EV.penal||1)) : (EV.caso_actual||1); }
 function setEstado(e, extra){ if(ready) db.ref("evento").update(Object.assign({estado:e, mostrar_contexto:false, mostrar_qr:false, presentacion:null}, extra||{})); }
 function toggleContexto(){ if(ready) db.ref("evento/mostrar_contexto").set(!EV.mostrar_contexto); }
 
@@ -114,41 +117,61 @@ function cerrarTiempo(){
   const c = EV.cronometro||{}; c.corriendo=false;
   setEstado("bloqueo", { cronometro:c });
 }
+function irAPenales(){ // forzar empate -> video "vamos a penales" -> penales
+  db.ref("evento").update({ modo:"penales", penal:1, estado:"penintro", empate:true, gol_ronda:null });
+}
 function siguiente(){
-  if(esUltimo()){ setEstado("final"); return; }
   db.ref("var_solicitudes").remove();
+  if(enPenales()){
+    if((EV.penal||1) >= PENALES.length){ setEstado("final"); return; }
+    db.ref("evento").update({ estado:"pregunta", penal:(EV.penal||1)+1, empate:false, gol_ronda:null });
+    return;
+  }
+  if(esUltimo()){ irAPenales(); return; }
   db.ref("evento").update({ estado:"cortinilla", caso_actual:(EV.caso_actual||1)+1 });
 }
 
-/* --- Cálculo de puntaje (idempotente por caso) --- */
+/* --- Cálculo de puntaje (idempotente). Casos y penales. --- */
 function revelar(){
-  const cid = EV.caso_actual||1; const c = CASOS.find(x=>x.id===cid)||CASOS[0];
-  db.ref("scored/"+cid).once("value").then(sn=>{
+  const key = qKey(); const c = preg(); const pen = enPenales();
+  db.ref("scored/"+key).once("value").then(sn=>{
     if(sn.val()){ setEstado("resultado"); return; }
-    Promise.all([ db.ref("respuestas/"+cid).once("value"), db.ref("equipos").once("value") ])
+    Promise.all([ db.ref("respuestas/"+key).once("value"), db.ref("equipos").once("value") ])
     .then(([rs,es])=>{
       const resp = rs.val()||{};
       const eq = es.val()||{};
       eq.rapido = eq.rapido||{puntaje:0,racha:0}; eq.control = eq.control||{puntaje:0,racha:0};
       const dur=(EV.cronometro&&EV.cronometro.duracion)||25;
       const inicio=(EV.cronometro&&EV.cronometro.inicio)||0;
-      const add={rapido:0,control:0}, correctos={rapido:0,control:0}, updates={};
+      const add={rapido:0,control:0}, correctos={rapido:0,control:0};
+      const st={rapido:{n:0,ok:0,vel:0},control:{n:0,ok:0,vel:0}};
+      const updates={};
       Object.entries(resp).forEach(([uid,r])=>{
         const ok = esCorrecta(c, r.opcion);
         const tRest = Math.max(0, dur-((r.ts-inicio)/1000));
         const racha = (eq[r.equipo]||{}).racha||0;
         const pts = calcPuntos(ok, tRest, dur, racha);
-        updates[`respuestas/${cid}/${uid}/correcta`]=ok;
-        updates[`respuestas/${cid}/${uid}/puntos`]=pts;
-        if(ok && add[r.equipo]!==undefined){ add[r.equipo]+=pts; correctos[r.equipo]++; }
+        updates[`respuestas/${key}/${uid}/correcta`]=ok;
+        updates[`respuestas/${key}/${uid}/puntos`]=pts;
+        if(add[r.equipo]!==undefined){
+          if(ok){ add[r.equipo]+=pts; correctos[r.equipo]++; }
+          st[r.equipo].n++; if(ok) st[r.equipo].ok++; st[r.equipo].vel += dur? Math.max(0,tRest)/dur : 0;
+        }
       });
       ["rapido","control"].forEach(t=>{
         eq[t].puntaje=(eq[t].puntaje||0)+add[t];
         eq[t].racha = correctos[t]>0 ? ((eq[t].racha||0)+1) : 0;
       });
       const gol = add.rapido>add.control ? "rapido" : (add.control>add.rapido ? "control" : "empate");
-      if(gol==="rapido"||gol==="control"){ eq[gol].goles = (eq[gol].goles||0)+1; }
-      updates["equipos"]=eq; updates["scored/"+cid]=true; updates["evento/gol_ronda"]=gol;
+      if(pen){
+        if(gol==="rapido"||gol==="control"){ eq[gol].penales = (eq[gol].penales||0)+1; }
+        const ps={};
+        ["rapido","control"].forEach(t=>{ ps[t]={ aciertos: st[t].n?Math.round(100*st[t].ok/st[t].n):0, velocidad: st[t].n?Math.round(100*st[t].vel/st[t].n):0, n:st[t].n }; });
+        updates["evento/penal_stats"]=ps;
+      } else {
+        if(gol==="rapido"||gol==="control"){ eq[gol].goles = (eq[gol].goles||0)+1; }
+      }
+      updates["equipos"]=eq; updates["scored/"+key]=true; updates["evento/gol_ronda"]=gol;
       db.ref().update(updates).then(()=>setEstado("resultado"));
     });
   });
@@ -170,7 +193,15 @@ function renderRoster(){
 
 const ATRAS = {cortinilla:"lobby",pregunta:"cortinilla",opciones:"pregunta",responder:"opciones",
   bloqueo:"responder",resultado:"bloqueo","var":"resultado",cierre:"resultado",final:"resultado",despedida:"final"};
-function atras(){ const p=ATRAS[EV.estado]; if(p) setEstado(p); }
+function atras(){
+  if(enPenales()){
+    const pmap={opciones:"pregunta",responder:"opciones",bloqueo:"responder",resultado:"bloqueo",penintro:"var"};
+    if(EV.estado==="pregunta"){ db.ref("evento").update((EV.penal||1)<=1?{estado:"penintro"}:{estado:"resultado",penal:(EV.penal-1)}); return; }
+    if(pmap[EV.estado]) setEstado(pmap[EV.estado]);
+    return;
+  }
+  const p=ATRAS[EV.estado]; if(p) setEstado(p);
+}
 
 function reiniciar(){
   if(!confirm("¿Reiniciar el evento? Se borran respuestas, puntajes y jugadores.")) return;
@@ -204,7 +235,9 @@ function render(){
     : "🎤 Ponente: sin seleccionar (elígelo antes de iniciar)";
   document.getElementById("stName").textContent = ST_NOMBRE[EV.estado]||EV.estado;
   document.getElementById("stCaso").textContent =
-    (EV.estado==="lobby"||EV.estado==="final")?"":("Caso "+(EV.caso_actual||1)+" de "+CASOS.length);
+    (EV.estado==="lobby"||EV.estado==="final") ? ""
+    : enPenales() ? ("Penal "+(EV.penal||1)+" de "+PENALES.length)
+    : ("Caso "+(EV.caso_actual||1)+" de "+CASOS.length);
   document.getElementById("nConn").textContent = Object.values(JUG).filter(j=>j.conectado!==false).length;
   document.getElementById("nRap").textContent = jugN("rapido");
   document.getElementById("nCon").textContent = jugN("control");
@@ -227,8 +260,12 @@ function render(){
     case "opciones":   addP("⏱ Iniciar cronómetro", abrirRespuestas); break;
     case "responder":  addP("Cerrar tiempo (silbato)", cerrarTiempo); break;
     case "bloqueo":    addP("Revelar resultado ⚽", revelar); break;
-    case "resultado":  addP("🟥 Ir al VAR", ()=>setEstado("var")); break;
-    case "var":        addP(esUltimo()?"🏁 Finalizar partido":"Siguiente pregunta →", siguiente); break;
+    case "resultado":
+      if(enPenales()) addP((EV.penal||1)>=PENALES.length ? "🏆 Ver ganador →" : "Siguiente penal →", siguiente);
+      else addP("🟥 Ir al VAR", ()=>setEstado("var"));
+      break;
+    case "var":        addP(esUltimo()?"🥅 Ir a penales →":"Siguiente pregunta →", siguiente); break;
+    case "penintro":   addP("Iniciar penal "+(EV.penal||1)+" →", ()=>db.ref("evento").update({estado:"pregunta", empate:false})); break;
     case "final":      addP("👋 Reproducir despedida →", ()=>setEstado("despedida")); break;
     case "despedida":  addP("🔄 Nuevo partido (reiniciar)", reiniciar, "danger"); break;
   }
@@ -257,7 +294,7 @@ function render(){
   add(EV.empate?"⏹️ Detener 'Vamos a penales'":"🥅 Vamos a penales (video)",
       ()=>db.ref("evento/empate").set(!EV.empate), "ghost mini");
   const cm = casoMod();
-  if(cm && ((cm.contexto_media&&cm.contexto_media.length) || cm.imagen || (cm.caso||"").trim())){
+  if(!enPenales() && cm && ((cm.contexto_media&&cm.contexto_media.length) || cm.imagen || (cm.caso||"").trim())){
     add(EV.mostrar_contexto?"🙈 Ocultar contexto":"👁 Ver contexto", toggleContexto, "ghost mini");
   }
   // 4) Cambiar ponente: hasta abajo (solo en lobby con ponente)
