@@ -18,12 +18,12 @@
 const CASOS = [
   {
     id: 1,
-    cortinilla: "cortinilla1-contexto.mp4",
+    cortinilla: "cortinilla1.mp4",
     caso: "Paciente masculino de 55 años, con sobrepeso, pirosis, regurgitación y ardor epigástrico de 6 meses. Niega datos de alarma. Se realiza endoscopia.",
     imagen: "duodenos.png",
     contexto_media: [
       { type: "video", src: "contexto1A-caso1.mp4" },
-      { type: "img",   src: "contexto1B-caso1.png" }
+      { type: "img",   src: "contexto1B-caso1.jpeg" }
     ],
     pregunta: "Hallazgo de Esofagitis B de los Ángeles y mucosa gástrica normal. Prueba rápida de ureasa y biopsia positiva para Helicobacter pylori. ¿cuál es la mejor justificación para elegir Tegoprazan como tratamiento de primera elección?",
     opciones: {
