@@ -110,7 +110,7 @@ function toggleContexto(){ if(ready) db.ref("evento").update({ mostrar_contexto:
 function lanzarOverlay(which){ // loop_full | musica | empate (mutuamente excluyentes)
   if(!ready) return;
   const estaba = which==="loop_full"?EV.loop_full : which==="musica"?EV.musica : EV.empate;
-  const upd = { loop_full:false, musica:false, empate:false };
+  const upd = { loop_full:false, musica:false, empate:false, presentacion:null };
   if(!estaba) upd[which]=true;
   db.ref("evento").update(upd);
 }
