@@ -145,7 +145,7 @@ let lastReactKey = null, timerInt = null, autoClosed = false;
 /* ---- Cortinillas de video (precarga + audio) ---- */
 const CORT_URLS = {};   // archivo -> blob URL tras precargar
 const DESPEDIDA = "despedida.mp4";
-function cortFiles(){ return [...new Set([...CASOS.map(c=>c.cortinilla), DESPEDIDA, "musica.mp4"].filter(Boolean))]; }
+function cortFiles(){ return [...new Set(CASOS.map(c=>c.cortinilla).filter(Boolean))]; }
 function cortPath(f){ return "../assets/"+f; }
 let PREPARED = false;
 const cortvid = document.getElementById("cortvid");
