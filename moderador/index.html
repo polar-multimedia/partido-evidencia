@@ -107,6 +107,16 @@ function preg(){ return enPenales() ? (PENALES[(EV.penal||1)-1]) : casoMod(); }
 function qKey(){ return enPenales() ? ("P"+(EV.penal||1)) : (EV.caso_actual||1); }
 function setEstado(e, extra){ if(ready) db.ref("evento").update(Object.assign({estado:e, mostrar_contexto:false, mostrar_qr:false, presentacion:null}, extra||{})); }
 function toggleContexto(){ if(ready) db.ref("evento").update({ mostrar_contexto:!EV.mostrar_contexto, ctx_slide:0 }); }
+function lanzarOverlay(which){ // loop_full | musica | empate (mutuamente excluyentes)
+  if(!ready) return;
+  const estaba = which==="loop_full"?EV.loop_full : which==="musica"?EV.musica : EV.empate;
+  const upd = { loop_full:false, musica:false, empate:false };
+  if(!estaba) upd[which]=true;
+  db.ref("evento").update(upd);
+}
+function lanzarPresentacion(){ if(!ready) return;
+  db.ref("evento").update({ presentacion: EV.presentacion?null:EV.ponente, loop_full:false, musica:false, empate:false });
+}
 
 function abrirRespuestas(){
   const dur = Math.max(5, parseInt(document.getElementById("dur").value)||25);
@@ -118,7 +128,7 @@ function cerrarTiempo(){
   setEstado("bloqueo", { cronometro:c });
 }
 function irAPenales(){ // forzar empate -> video "vamos a penales" -> penales
-  db.ref("evento").update({ modo:"penales", penal:1, estado:"penintro", empate:true, gol_ronda:null });
+  db.ref("evento").update({ modo:"penales", penal:1, estado:"penintro", empate:true, gol_ronda:null, loop_full:false, musica:false });
 }
 function siguiente(){
   db.ref("var_solicitudes").remove();
@@ -281,18 +291,18 @@ function render(){
     } else {
       const nom = EV.ponente==="villar" ? "Dra. Villar" : "Dr. Cerda";
       add(EV.presentacion ? "⏹️ Detener presentación" : ("🎤 Reproducir presentación · "+nom),
-          ()=>db.ref("evento/presentacion").set(EV.presentacion?null:EV.ponente), "ghost mini");
+          lanzarPresentacion, "ghost mini");
     }
   }
   // 3) Lanzadores secundarios (siempre disponibles, en chico)
   add(EV.mostrar_qr?"🙈 Ocultar QR":"📲 Mostrar QR de acceso",
       ()=>db.ref("evento/mostrar_qr").set(!EV.mostrar_qr), "ghost mini");
   add(EV.musica?"⏹️ Detener video musical":"🎵 Lanzar video musical",
-      ()=>db.ref("evento/musica").set(!EV.musica), "ghost mini");
+      ()=>lanzarOverlay("musica"), "ghost mini");
   add(EV.loop_full?"⏹️ Detener loop":"🎬 Lanzar loop (sin sonido)",
-      ()=>db.ref("evento/loop_full").set(!EV.loop_full), "ghost mini");
+      ()=>lanzarOverlay("loop_full"), "ghost mini");
   add(EV.empate?"⏹️ Detener 'Vamos a penales'":"🥅 Vamos a penales (video)",
-      ()=>db.ref("evento/empate").set(!EV.empate), "ghost mini");
+      ()=>lanzarOverlay("empate"), "ghost mini");
   const cm = casoMod();
   if(!enPenales() && cm && ((cm.contexto_media&&cm.contexto_media.length) || cm.imagen || (cm.caso||"").trim())){
     add(EV.mostrar_contexto?"🙈 Ocultar contexto":"👁 Ver contexto", toggleContexto, "ghost mini");
