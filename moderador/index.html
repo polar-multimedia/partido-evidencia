@@ -272,7 +272,7 @@ function render(){
     case "bloqueo":    addP("Revelar resultado ⚽", revelar); break;
     case "resultado":
       if(enPenales()) addP((EV.penal||1)>=PENALES.length ? "🏆 Ver ganador →" : "Siguiente penal →", siguiente);
-      else addP("🟥 Ir al VAR", ()=>setEstado("var"));
+      else addP("🟥 Ir al VAR", ()=>setEstado("var",{var_slide:0}));
       break;
     case "var":        addP(esUltimo()?"🥅 Ir a penales →":"Siguiente pregunta →", siguiente); break;
     case "penintro":   addP("Iniciar penal "+(EV.penal||1)+" →", ()=>db.ref("evento").update({estado:"pregunta", empate:false})); break;
@@ -281,6 +281,9 @@ function render(){
   }
   // Atrás (deshacer) justo bajo el principal
   if(ATRAS[EV.estado]){ add("↩️ Atrás (undo)", atras, "ghost mini"); }
+  // avanzar slides del carrusel del VAR
+  if(EV.estado==="var"){ const vm=(preg().var_media)||[]; if(vm.length>1){ const cur=EV.var_slide||0;
+    add("🖼️ VAR "+(cur+1)+"/"+vm.length+" — siguiente slide →", ()=>db.ref("evento/var_slide").set((cur+1)%vm.length), "ghost mini"); } }
 
   sep();
   // 2) Selección / presentación del ponente (solo en lobby)

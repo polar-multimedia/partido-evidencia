@@ -59,7 +59,9 @@ const CASOS = [
         "La acción del tegoprazán no se afecta por el polimorfismo genético; la del IBP sí."
       ]
     },
-    evidencia_imagen: "evidencia_hpylori.png",
+    var_media: [
+      { type:"img", src:"evidencia_hpylori.png" }
+    ],
     fuentes: [
       "Scarpignato C et al. Pharmacologic treatment of GERD: Where we are now, and where are we going? Ann N.Y. Acad Sci. 2020.",
       "Herszényi L et al. Pharmacological Approach to Gastric Acid Suppression: Past, Present, and Future. Dig Dis. 2020;38:104-111."
@@ -114,7 +116,9 @@ const CASOS = [
         "El tegoprazán (P-CAB) eleva y sostiene el pH, mejorando la eficacia de los antibióticos."
       ]
     },
-    evidencia_imagen: "evidencia3.png",
+    var_media: [
+      { type:"img", src:"evidencia3.png" }
+    ],
     fuentes: [
       "J.M. Remes-Troche et al. V consenso mexicano sobre el diagnóstico y tratamiento de la infección por Helicobacter pylori. Rev Gastroenterol Méx. 2026;91:89-114."
     ],

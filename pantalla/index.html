@@ -321,9 +321,7 @@ function render(){
   // sonido de reloj durante la cuenta regresiva
   if(e==="responder"){ if(reloj.paused){ reloj.currentTime=0; reloj.play().catch(()=>{}); } }
   else { if(!reloj.paused){ reloj.pause(); reloj.currentTime=0; } }
-  // VAR automático: 5s después de mostrar el resultado (solo en casos, no en penales)
-  if(e==="resultado" && !enPenalesP()){ if(!varTimer) varTimer=setTimeout(()=>{ varTimer=null; if(STATE.evento.estado==="resultado") db.ref("evento/estado").set("var"); }, 5000); }
-  else if(varTimer){ clearTimeout(varTimer); varTimer=null; }
+  // (El VAR ya NO es automático: el operador lo abre manualmente desde el control.)
   renderCtxOverlay();
   renderQrOverlay();
   renderMusica();
@@ -402,7 +400,14 @@ function render(){
     }
   }
   else if(e==="var"){
-    if(c.evidencia_imagen){
+    const vm = c.var_media;
+    if(vm && vm.length){
+      const idx = Math.min(STATE.evento.var_slide||0, vm.length-1);
+      const m = vm[idx] || vm[0];
+      scene.innerHTML = m.type==="video"
+        ? `<video class="varfull" src="../assets/${m.src}" autoplay loop muted playsinline></video>`
+        : `<img class="varfull" src="../assets/${m.src}" alt="">`;
+    } else if(c.evidencia_imagen){
       scene.innerHTML = `<img class="varfull" src="../assets/${c.evidencia_imagen}" alt="">`;
     } else {
       const ev = c.evidencia||{titulo:"Evidencia",puntos:[]};
