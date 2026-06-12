@@ -60,7 +60,8 @@ const CASOS = [
       ]
     },
     var_media: [
-      { type:"img", src:"evidencia_hpylori.png" }
+      { type:"img", src:"VAR-pregunta1A.png" },
+      { type:"img", src:"VAR-pregunta1B.png" }
     ],
     fuentes: [
       "Scarpignato C et al. Pharmacologic treatment of GERD: Where we are now, and where are we going? Ann N.Y. Acad Sci. 2020.",
@@ -90,6 +91,9 @@ const CASOS = [
         "Mantenimiento: a la dosis con que se controlen los síntomas (mitad de dosis, 25 mg, en grados C y D)."
       ]
     },
+    var_media: [
+      { type:"img", src:"VAR-pregunta2.png" }
+    ],
     fuentes: [
       "Valdovinos M.A. Recomendaciones de buena práctica clínica en el diagnóstico y tratamiento de la enfermedad por reflujo gastroesofágico. Revisión por expertos de la Asociación Mexicana de Gastroenterología. Rev Gastroenterol Méx. 2024;89:121-143."
     ],
@@ -117,7 +121,7 @@ const CASOS = [
       ]
     },
     var_media: [
-      { type:"img", src:"evidencia3.png" }
+      { type:"img", src:"VAR-pregunta3.png" }
     ],
     fuentes: [
       "J.M. Remes-Troche et al. V consenso mexicano sobre el diagnóstico y tratamiento de la infección por Helicobacter pylori. Rev Gastroenterol Méx. 2026;91:89-114."
@@ -146,6 +150,9 @@ const CASOS = [
         "Calidad de la evidencia: A · Fuerza de la recomendación: fuerte a favor."
       ]
     },
+    var_media: [
+      { type:"img", src:"VAR-pregunta4.png" }
+    ],
     fuentes: [
       "J.M. Remes-Troche et al. V consenso mexicano sobre el diagnóstico y tratamiento de la infección por Helicobacter pylori. Rev Gastroenterol Méx. 2026;91:89-114."
     ],
