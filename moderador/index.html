@@ -96,13 +96,17 @@
 <script>
 const ST_NOMBRE = {lobby:"Lobby / Registro",cortinilla:"Cortinilla",pregunta:"Pregunta (sin opciones)",
   opciones:"Opciones (lee el ponente)",responder:"Respondiendo ⏱",bloqueo:"Bloqueo",
-  resultado:"Resultado / Gol",var:"VAR de la evidencia",cierre:"Cierre",final:"Final / Campeón",despedida:"Despedida",penintro:"Vamos a penales"};
+  resultado:"Resultado / Gol",var:"VAR de la evidencia",cierre:"Cierre",final:"Final / Campeón",despedida:"Despedida",penintro:"Vamos a penales",
+  presentacion:"Presentación del ponente",contexto:"Contexto del caso",transicion:"Medio tiempo"};
 let EV={estado:"lobby",caso_actual:1}, JUG={}, VARS={}, ready=false;
 
 function esUltimo(){ return (EV.caso_actual||1) >= CASOS.length; }
 function jugN(eq){ return Object.values(JUG).filter(j=>j.equipo===eq).length; }
 function enPenales(){ return EV.modo==="penales"; }
 function casoMod(){ return CASOS.find(x=>x.id===(EV.caso_actual||1)) || CASOS[0]; }
+function casoClinico(){ return casoMod().caso_clinico || 1; }
+function finCaso1(){ return (EV.caso_actual||1)===4; }   // última pregunta del caso clínico 1
+function ultimaPreg(){ return (EV.caso_actual||1)>=CASOS.length; }  // última pregunta del caso 2
 function preg(){ return enPenales() ? (PENALES[(EV.penal||1)-1]) : casoMod(); }
 function qKey(){ return enPenales() ? ("P"+(EV.penal||1)) : (EV.caso_actual||1); }
 function setEstado(e, extra){ if(ready) db.ref("evento").update(Object.assign({estado:e, mostrar_contexto:false, mostrar_qr:false, presentacion:null}, extra||{})); }
@@ -130,15 +134,16 @@ function cerrarTiempo(){
 function irAPenales(){ // forzar empate -> video "vamos a penales" -> penales
   db.ref("evento").update({ modo:"penales", penal:1, estado:"penintro", empate:true, gol_ronda:null, loop_full:false, musica:false });
 }
-function siguiente(){
+function siguiente(){ // tras el VAR de cada pregunta
   db.ref("var_solicitudes").remove();
   if(enPenales()){
     if((EV.penal||1) >= PENALES.length){ setEstado("final"); return; }
     db.ref("evento").update({ estado:"pregunta", penal:(EV.penal||1)+1, empate:false, gol_ronda:null });
     return;
   }
-  if(esUltimo()){ irAPenales(); return; }
-  db.ref("evento").update({ estado:"cortinilla", caso_actual:(EV.caso_actual||1)+1 });
+  if(ultimaPreg()){ irAPenales(); return; }                 // tras P8 -> penales
+  if(finCaso1()){ setEstado("transicion",{trans:"final1T"}); return; }  // tras P4 -> medio tiempo
+  setEstado("cortinilla",{ caso_actual:(EV.caso_actual||1)+1 });        // siguiente pregunta del mismo caso
 }
 
 /* --- Cálculo de puntaje (idempotente). Casos y penales. --- */
@@ -201,8 +206,8 @@ function renderRoster(){
     + `<div class="rostercol"><div class="rh green">🛡️ Control Sostenido (${jugN('control')})</div><ul>${list('control')}</ul></div>`;
 }
 
-const ATRAS = {cortinilla:"lobby",pregunta:"cortinilla",opciones:"pregunta",responder:"opciones",
-  bloqueo:"responder",resultado:"bloqueo","var":"resultado",cierre:"resultado",final:"resultado",despedida:"final"};
+const ATRAS = {presentacion:"lobby",contexto:"presentacion",cortinilla:"contexto",pregunta:"cortinilla",opciones:"pregunta",responder:"opciones",
+  bloqueo:"responder",resultado:"bloqueo","var":"resultado",transicion:"var",final:"resultado",despedida:"final"};
 function atras(){
   if(enPenales()){
     const pmap={opciones:"pregunta",responder:"opciones",bloqueo:"responder",resultado:"bloqueo",penintro:"var"};
@@ -245,9 +250,9 @@ function render(){
     : "🎤 Ponente: sin seleccionar (elígelo antes de iniciar)";
   document.getElementById("stName").textContent = ST_NOMBRE[EV.estado]||EV.estado;
   document.getElementById("stCaso").textContent =
-    (EV.estado==="lobby"||EV.estado==="final") ? ""
+    (EV.estado==="lobby"||EV.estado==="final"||EV.estado==="presentacion") ? ""
     : enPenales() ? ("Penal "+(EV.penal||1)+" de "+PENALES.length)
-    : ("Caso "+(EV.caso_actual||1)+" de "+CASOS.length);
+    : ("Caso clínico "+casoClinico()+" · Pregunta "+(EV.caso_actual||1)+" de "+CASOS.length);
   document.getElementById("nConn").textContent = Object.values(JUG).filter(j=>j.conectado!==false).length;
   document.getElementById("nRap").textContent = jugN("rapido");
   document.getElementById("nCon").textContent = jugN("control");
@@ -264,26 +269,33 @@ function render(){
 
   // 1) BOTÓN PRINCIPAL (siempre primero, el más vistoso)
   switch(EV.estado){
-    case "lobby":      addP("▶️ Iniciar partido", ()=>setEstado("cortinilla")); break;
-    case "cortinilla": addP("Mostrar pregunta →", ()=>setEstado("pregunta")); break;
+    case "lobby":      addP("▶️ Iniciar", ()=>setEstado("presentacion",{caso_actual:1, modo:null, penal:null})); break;
+    case "presentacion": addP("Contexto Caso 1 →", ()=>setEstado("contexto",{ctx_slide:0})); break;
+    case "contexto":   addP("Mostrar cortinilla pregunta "+(EV.caso_actual||1)+" →", ()=>setEstado("cortinilla")); break;
+    case "cortinilla": addP("Mostrar pregunta "+(EV.caso_actual||1)+" →", ()=>setEstado("pregunta")); break;
     case "pregunta":   addP("Mostrar opciones →", ()=>setEstado("opciones")); break;
     case "opciones":   addP("⏱ Iniciar cronómetro", abrirRespuestas); break;
     case "responder":  addP("Cerrar tiempo (silbato)", cerrarTiempo); break;
     case "bloqueo":    addP("Revelar resultado ⚽", revelar); break;
     case "resultado":
       if(enPenales()) addP((EV.penal||1)>=PENALES.length ? "🏆 Ver ganador →" : "Siguiente penal →", siguiente);
-      else addP("🟥 Ir al VAR", ()=>setEstado("var",{var_slide:0}));
+      else addP("🟥 Ver VAR pregunta "+(EV.caso_actual||1), ()=>setEstado("var",{var_slide:0}));
       break;
-    case "var":        addP(esUltimo()?"🥅 Ir a penales →":"Siguiente pregunta →", siguiente); break;
+    case "var":
+      if(ultimaPreg()) addP("🥅 Ir a penales →", siguiente);
+      else if(finCaso1()) addP("⏸️ Final primer tiempo →", siguiente);
+      else addP("Mostrar cortinilla pregunta "+((EV.caso_actual||1)+1)+" →", siguiente);
+      break;
+    case "transicion":
+      if(EV.trans==="final1T") addP("▶️ Inicio segundo tiempo →", ()=>setEstado("transicion",{trans:"inicio2T"}));
+      else addP("Contexto Caso 2 →", ()=>setEstado("contexto",{caso_actual:5, ctx_slide:0}));
+      break;
     case "penintro":   addP("Iniciar penal "+(EV.penal||1)+" →", ()=>db.ref("evento").update({estado:"pregunta", empate:false})); break;
     case "final":      addP("👋 Reproducir despedida →", ()=>setEstado("despedida")); break;
     case "despedida":  addP("🔄 Nuevo partido (reiniciar)", reiniciar, "danger"); break;
   }
   // Atrás (deshacer) justo bajo el principal
   if(ATRAS[EV.estado]){ add("↩️ Atrás (undo)", atras, "ghost mini"); }
-  // avanzar slides del carrusel del VAR
-  if(EV.estado==="var"){ const vm=(preg().var_media)||[]; if(vm.length>1){ const cur=EV.var_slide||0;
-    add("🖼️ VAR "+(cur+1)+"/"+vm.length+" — siguiente slide →", ()=>db.ref("evento/var_slide").set((cur+1)%vm.length), "ghost mini"); } }
 
   sep();
   // 2) Selección / presentación del ponente (solo en lobby)
@@ -306,15 +318,19 @@ function render(){
       ()=>lanzarOverlay("loop_full"), "ghost mini");
   add(EV.empate?"⏹️ Detener 'Vamos a penales'":"🥅 Vamos a penales (video)",
       ()=>lanzarOverlay("empate"), "ghost mini");
-  const cm = casoMod();
-  if(!enPenales() && cm && ((cm.contexto_media&&cm.contexto_media.length) || cm.imagen || (cm.caso||"").trim())){
-    add(EV.mostrar_contexto?"🙈 Ocultar contexto":"👁 Ver contexto", toggleContexto, "ghost mini");
-    const nSlides=(cm.contexto_media||[]).length;
-    if(EV.mostrar_contexto && nSlides>1){
-      const cur=(EV.ctx_slide||0);
-      add("🖼️ Contexto "+(cur+1)+"/"+nSlides+" — siguiente slide →", ()=>db.ref("evento/ctx_slide").set((cur+1)%nSlides), "ghost mini");
-    }
+  const ncx = (CONTEXTO_CASO[casoClinico()]||[]).length;
+  // avanzar slide del carrusel de contexto (en el paso de contexto o en el overlay a demanda)
+  if((EV.estado==="contexto" || EV.mostrar_contexto) && ncx>1){
+    const cur=(EV.ctx_slide||0);
+    add("🖼️ Contexto "+(cur+1)+"/"+ncx+" — siguiente slide →", ()=>db.ref("evento/ctx_slide").set((cur+1)%ncx), "ghost mini");
   }
+  // Ver contexto a demanda durante las preguntas
+  if(!enPenales() && ncx && ["cortinilla","pregunta","opciones","responder","bloqueo","resultado","var"].includes(EV.estado)){
+    add(EV.mostrar_contexto?"🙈 Ocultar contexto":"👁 Ver contexto", toggleContexto, "ghost mini");
+  }
+  // avanzar slide del carrusel del VAR
+  if(EV.estado==="var"){ const vm=(preg().var_media)||[]; if(vm.length>1){ const cur=EV.var_slide||0;
+    add("🖼️ VAR "+(cur+1)+"/"+vm.length+" — siguiente slide →", ()=>db.ref("evento/var_slide").set((cur+1)%vm.length), "ghost mini"); } }
   // 4) Cambiar ponente: hasta abajo (solo en lobby con ponente)
   if(EV.estado==="lobby" && EV.ponente){
     sep();

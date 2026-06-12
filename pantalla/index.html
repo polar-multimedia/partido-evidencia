@@ -145,7 +145,7 @@ let lastReactKey = null, timerInt = null, autoClosed = false;
 /* ---- Cortinillas de video (precarga + audio) ---- */
 const CORT_URLS = {};   // archivo -> blob URL tras precargar
 const DESPEDIDA = "despedida.mp4";
-function cortFiles(){ return [...new Set(CASOS.map(c=>c.cortinilla).filter(Boolean))]; }
+function cortFiles(){ return []; }  // sin precarga: streaming bajo demanda (preparación instantánea)
 function cortPath(f){ return "../assets/"+f; }
 let PREPARED = false;
 const cortvid = document.getElementById("cortvid");
@@ -208,6 +208,7 @@ function casoActual(){ return CASOS.find(c => c.id === (STATE.evento.caso_actual
 function enPenalesP(){ return STATE.evento.modo==="penales"; }
 function preguntaActual(){ return enPenalesP() ? (PENALES[(STATE.evento.penal||1)-1]) : casoActual(); }
 function qKeyP(){ return enPenalesP() ? ("P"+(STATE.evento.penal||1)) : (STATE.evento.caso_actual||1); }
+function casoClinicoP(){ return (casoActual().caso_clinico)||1; }
 function jugadoresPorEquipo(eq){ return Object.values(STATE.jugadores||{}).filter(j=>j.equipo===eq).length; }
 
 function marcadorEquipo(eq){ return enPenalesP() ? ((STATE.equipos[eq]||{}).penales||0) : ((STATE.equipos[eq]||{}).goles||0); }
@@ -237,22 +238,12 @@ function paintCtxSlideIdx(media, idx){
 }
 function renderCtxOverlay(){
   const o = document.getElementById("ctxoverlay");
-  const c = casoActual();
-  const media = c && c.contexto_media;
-  const has = STATE.evento.mostrar_contexto && c && ((media&&media.length) || c.imagen || (c.caso||"").trim());
+  const media = CONTEXTO_CASO[casoClinicoP()] || [];
+  const has = STATE.evento.mostrar_contexto && media.length;
   if(!has){ o.classList.remove("show"); o.innerHTML=""; o.dataset.on=""; o.dataset.idx=""; return; }
-  if(media && media.length){
-    const idx = Math.min(STATE.evento.ctx_slide||0, media.length-1);
-    if(o.dataset.on!=="carousel"){ o.dataset.on="carousel"; o.dataset.idx=""; o.innerHTML = `<div class="ctxslide"></div>`; }
-    if(o.dataset.idx!==String(idx)){ o.dataset.idx=String(idx); paintCtxSlideIdx(media, idx); }   // avanza solo cuando el operador cambia el slide
-    o.classList.add("show");
-    return;
-  }
-  o.dataset.on="txt"; o.dataset.idx="";
-  o.innerHTML = `<div class="casebox pop">
-      <div class="lbl">Contexto · Caso ${STATE.evento.caso_actual}</div>
-      ${(c.caso||"").trim() ? `<div class="ctext">${escapeHTML(c.caso)}</div>` : ""}
-      ${c.imagen ? `<img class="caseimg" src="../assets/${c.imagen}" alt="">` : ""}</div>`;
+  const idx = Math.min(STATE.evento.ctx_slide||0, media.length-1);
+  if(o.dataset.on!=="carousel"){ o.dataset.on="carousel"; o.dataset.idx=""; o.innerHTML = `<div class="ctxslide"></div>`; }
+  if(o.dataset.idx!==String(idx)){ o.dataset.idx=String(idx); paintCtxSlideIdx(media, idx); }
   o.classList.add("show");
 }
 function renderQrOverlay(){
@@ -351,11 +342,28 @@ function render(){
   }
   else if(e==="cortinilla"){
     scene.innerHTML = `<div class="tag">La evidencia entra a la cancha</div>
-      <div class="big pop">CASO ${STATE.evento.caso_actual}</div>
+      <div class="big pop">PREGUNTA ${STATE.evento.caso_actual}</div>
       <div class="muted" style="font-size:26px;margin-top:14px">Prepárate…</div>`;
   }
+  else if(e==="presentacion"){
+    const file = STATE.evento.ponente==="cerda" ? "presentacion-cerda.mp4" : "presentacion-villar.mp4";
+    scene.innerHTML = `<video class="varfull" src="../assets/${file}" autoplay playsinline></video>`;
+  }
+  else if(e==="contexto"){
+    const media = CONTEXTO_CASO[casoClinicoP()] || [];
+    const idx = Math.min(STATE.evento.ctx_slide||0, media.length-1);
+    const m = media[idx];
+    scene.innerHTML = m
+      ? (m.type==="video" ? `<video class="varfull" src="../assets/${m.src}" autoplay loop playsinline></video>`
+                          : `<img class="varfull" src="../assets/${m.src}" alt="">`)
+      : `<div class="big">Contexto Caso ${casoClinicoP()}</div>`;
+  }
+  else if(e==="transicion"){
+    const file = STATE.evento.trans==="inicio2T" ? "inicio-segundo-tiempo.mp4" : "final-primer-tiempo.mp4";
+    scene.innerHTML = `<video class="varfull" src="../assets/${file}" autoplay playsinline></video>`;
+  }
   else if(e==="pregunta"){
-    const lbl = enPenalesP() ? ("Penal "+(STATE.evento.penal||1)+" de "+PENALES.length) : ("Pregunta · Caso "+(STATE.evento.caso_actual||1));
+    const lbl = enPenalesP() ? ("Penal "+(STATE.evento.penal||1)+" de "+PENALES.length) : ("Pregunta "+(STATE.evento.caso_actual||1)+" · Caso clínico "+casoClinicoP());
     scene.innerHTML = `<div class="casebox pop">
         <div class="lbl">${lbl}</div>
         <div class="q">${escapeHTML(c.pregunta)}</div></div>

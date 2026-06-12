@@ -285,7 +285,10 @@ function render(){
   chip();
   switch(EV.estado){
     case "lobby":      watch("Esperando a que inicie el partido…","⏳"); break;
-    case "cortinilla": watch("Caso "+EV.caso_actual,"⚽"); break;
+    case "presentacion": watch("Presentación del ponente — mira la pantalla","🎤"); break;
+    case "contexto":   watch("Contexto del caso — mira la pantalla","👀"); break;
+    case "transicion": watch("Medio tiempo — mira la pantalla","⏸️"); break;
+    case "cortinilla": watch("Pregunta "+EV.caso_actual,"⚽"); break;
     case "pregunta":   renderLectura(false); break;
     case "opciones":   renderLectura(true); break;
     case "responder":  renderResponder(); break;
