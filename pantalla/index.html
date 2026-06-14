@@ -159,7 +159,7 @@ const silbato = new Audio("../assets/silbato.mp3");
 silbato.preload = "auto";
 const reloj = new Audio("../assets/reloj.mp3");
 reloj.preload = "auto"; reloj.loop = true;
-let lastWhistleState = null, varTimer = null, alarmTimer = null, lastSceneKey = "__none__";
+let lastWhistleState = null, varTimer = null, alarmTimer = null, lastSceneKey = "__none__", varAlarmKey = null;
 const WHISTLE = '<svg viewBox="0 0 64 40" width="78" height="48" style="vertical-align:-10px;margin-right:8px"><path fill="#f2b53b" d="M2 12h26l12-7v10h16a7 7 0 0 1 0 14H40v9l-12-7H22A18 18 0 1 1 2 12z"/><circle cx="22" cy="22" r="9" fill="#0a0e15"/></svg>';
 cortvid.addEventListener("error", ()=>cortvid.classList.remove("show"));  // si falla, cae a cortinilla CSS
 cortvid.addEventListener("ended", ()=>{ /* mantiene último cuadro hasta que el operador avance */ });
@@ -418,8 +418,14 @@ function render(){
     if(showTimer) startTimer();
     if(reveal && Object.keys(STATE.var_solicitudes||{}).length){
       const n = Object.keys(STATE.var_solicitudes).length;
-      const a = document.createElement("div"); a.id="varAlarm"; a.className="pulse";
-      a.textContent = `🚨 VAR solicitado por ${n}`; document.getElementById("main").appendChild(a);
+      // Clave por ronda: solo mostramos UNA vez por pregunta y se apaga solo a los 10 s.
+      const key = (enPenalesP()?"P"+(STATE.evento.penal||0):"Q"+(STATE.evento.caso_actual||0));
+      if(varAlarmKey!==key && !document.getElementById("varAlarm")){
+        varAlarmKey = key;
+        const a = document.createElement("div"); a.id="varAlarm"; a.className="pulse";
+        a.textContent = `🚨 VAR solicitado por ${n}`; document.getElementById("main").appendChild(a);
+        setTimeout(()=>{ const el=document.getElementById("varAlarm"); if(el){ el.style.transition="opacity .6s"; el.style.opacity="0"; setTimeout(()=>el.remove(),600); } }, 10000);
+      }
     }
   }
   else if(e==="var"){
