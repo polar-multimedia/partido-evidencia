@@ -7,50 +7,78 @@
 <style>
   html{background:#0a0e15}
   body{background:transparent}
-  #bgloop{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;opacity:.35}
-  #bgveil{position:fixed;inset:0;z-index:-1;background:linear-gradient(rgba(8,11,17,.72),rgba(8,11,17,.88))}
-  #app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding:16px;gap:12px}
+  #bgloop{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;opacity:.22}
+  #bgveil{position:fixed;inset:0;z-index:-1;background:
+    radial-gradient(130% 80% at 0% 0%, rgba(25,195,214,.20), transparent 46%),
+    radial-gradient(130% 80% at 100% 100%, rgba(255,140,90,.18), transparent 46%),
+    linear-gradient(rgba(8,11,17,.82),rgba(8,11,17,.93))}
+  #app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;
+    padding:14px 14px 210px;gap:12px}
+  .card{background:rgba(20,28,42,.80);border:1px solid rgba(255,255,255,.07);border-radius:18px;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
   .hdr{display:flex;align-items:center;justify-content:space-between}
-  .hdr .brand{font-size:15px}
-  .statebox{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center}
-  .statebox .tag{margin-bottom:4px}
-  .statebox .st{font-size:26px;font-weight:900}
+  .hdr .brand{font-size:15px;font-weight:800}
+  #ponenteTag{display:flex;align-items:center;gap:12px;background:rgba(25,195,214,.12);
+    border:1px solid rgba(25,195,214,.35);border-radius:16px;padding:8px 14px;font-weight:700;
+    font-size:13px;line-height:1.25}
+  #ponenteTag img{height:46px;width:auto;border-radius:8px;flex:0 0 auto}
+  #ponenteTag b{font-size:16px}
+  .statebox{padding:16px;text-align:center}
+  .statebox .tag{margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em;font-size:11px;color:var(--muted)}
+  .statebox .st{font-size:27px;font-weight:900}
   .statebox .caso{color:var(--muted);font-size:14px;margin-top:2px}
   .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
-  .stat .n{font-size:22px;font-weight:900;font-variant-numeric:tabular-nums}
+  .stat{padding:12px;text-align:center}
+  .stat .n{font-size:24px;font-weight:900;font-variant-numeric:tabular-nums}
   .stat .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-  .actions{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+  .actions{display:flex;flex-direction:column;gap:10px}
   .row{display:flex;gap:10px}
   .row .btn{flex:1}
-  .mini{font-size:14px;padding:11px 14px;border-radius:11px}
-  .cfg{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);
-    border-radius:12px;padding:10px 14px;font-size:14px}
-  .cfg input{width:66px;padding:8px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-family:inherit}
-  .varbox{background:rgba(232,85,77,.12);border:1px solid rgba(232,85,77,.5);border-radius:12px;padding:12px;text-align:center;font-weight:800;color:#ffb4ae}
-  .danger{color:var(--red);border-color:rgba(232,85,77,.4) !important}
-  details{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:13px}
-  summary{cursor:pointer;color:var(--muted)}
+  .btn{font-weight:800;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;
+    transition:transform .08s ease, box-shadow .2s, border-color .2s, background .2s}
+  .btn:active{transform:scale(.96)}
+  .actions .btn{font-size:18px;padding:16px 18px;border-radius:16px;line-height:1.2;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);color:#fff}
+  .actions .btn.ghost{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);color:#fff}
+  .actions .btn.ghost:hover{border-color:var(--teal)}
+  .actions .btn.mini{font-size:15px;padding:13px 15px;border-radius:13px}
+  .btn.danger{color:#ffb4ae;border-color:rgba(232,85,77,.45)!important;background:rgba(232,85,77,.10)!important}
+  /* Dock fijo abajo: botón principal + navegación */
+  #dock{position:fixed;left:0;right:0;bottom:0;z-index:50;max-width:520px;margin:0 auto;
+    padding:14px 14px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;
+    background:linear-gradient(rgba(8,11,17,0),rgba(8,11,17,.55) 18%,rgba(8,11,17,.90) 55%)}
+  #prim{display:flex;flex-direction:column;gap:10px}
+  #prim .btn.primary{font-size:24px;font-weight:900;padding:22px 20px;border-radius:22px;color:#241405;
+    background:linear-gradient(135deg,#ffc163,#ff7e5f);box-shadow:0 12px 32px rgba(255,126,95,.42)}
+  #prim .btn.primary.go{background:linear-gradient(135deg,#7ee787,#19c3d6);color:#062019;
+    box-shadow:0 12px 32px rgba(25,195,214,.42)}
+  #prim .navrow{display:flex;gap:10px;align-items:center}
+  #prim .navrow .btn{flex:1;font-size:15px;padding:13px 10px;border-radius:14px;color:#fff;
+    background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14)}
+  #prim .navlbl{flex:0 0 auto;font-weight:900;color:#cfd8e3;font-size:14px;padding:0 6px}
+  /* Duración con chips rápidos */
+  .cfg{padding:12px 14px;display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--muted)}
+  .cfg .chips{display:flex;gap:8px}
+  .cfg .chip{flex:1;padding:11px 0;border-radius:12px;text-align:center;font-weight:800;font-size:16px;color:#fff;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);cursor:pointer}
+  .cfg .chip.active{background:var(--teal);color:#06222a;border-color:var(--teal)}
+  .cfg .custom{display:flex;align-items:center;gap:8px;justify-content:center}
+  .cfg input{width:72px;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.14);
+    background:rgba(0,0,0,.30);color:var(--text);font-family:inherit;text-align:center;font-weight:800}
+  .varbox{background:rgba(232,85,77,.12);border:1px solid rgba(232,85,77,.5);border-radius:14px;padding:12px;text-align:center;font-weight:800;color:#ffb4ae}
+  details.card{padding:12px 14px;font-size:13px}
+  summary{cursor:pointer;color:#fff;font-weight:800;list-style:none}
+  summary::-webkit-details-marker{display:none}
   #cfgnote{text-align:center;color:var(--muted);font-size:11px}
-  #roster{display:flex;gap:10px;margin-top:2px}
+  #roster{display:flex;gap:10px}
   #roster:empty{display:none}
-  .rostercol{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .rostercol{flex:1;background:rgba(20,28,42,.80);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:10px 12px}
   .rostercol .rh{font-weight:800;font-size:13px;margin-bottom:6px}
   .rostercol ul{margin:0;padding-left:18px;font-size:13px}
   .rostercol li{margin-bottom:3px}
   .teal{color:var(--teal)} .green{color:var(--green)}
-  /* Botones más grandes y legibles */
-  .actions .btn{font-size:19px;font-weight:800;padding:17px 20px;border-radius:14px;line-height:1.2}
-  .actions .btn.lg{font-size:22px;padding:20px 22px}
-  .actions .btn.ghost{background:rgba(15,22,32,.92);border:1px solid #34485e;color:#fff;box-shadow:none}
-  .actions .btn.ghost:hover{border-color:var(--teal)}
-  .actions .btn.mini{font-size:15px;padding:13px 16px}
-  .actions .btn.primary{font-size:26px;padding:26px 22px;box-shadow:0 8px 28px rgba(140,224,33,.35);margin-bottom:4px}
-  .actions .sep{height:1px;background:var(--line);margin:6px 0 2px}
-  .statebox{background:rgba(18,26,38,.94)}
-  .statebox .st{font-size:28px}
-  .stat{background:rgba(15,22,32,.92)}
-  .cfg, details, .rostercol{background:rgba(15,22,32,.92)}
+  .pulse{animation:pulsemod 1s infinite}
+  @keyframes pulsemod{0%,100%{opacity:1}50%{opacity:.55}}
 </style>
 </head><body>
 <video id="bgloop" src="../assets/loop.mp4" autoplay loop muted playsinline></video>
@@ -60,32 +88,36 @@
     <div class="brand">🎛️ Control <span class="kc">· Partido de la Evidencia</span></div>
     <span class="tag" id="conn">···</span>
   </div>
-  <div id="ponenteTag" style="text-align:center;font-weight:800;font-size:14px;background:rgba(25,195,214,.14);border:1px solid rgba(25,195,214,.4);border-radius:10px;padding:8px"></div>
-  <div class="statebox">
+  <div id="ponenteTag"></div>
+  <div class="statebox card">
     <div class="tag">Estado actual</div>
     <div class="st" id="stName">—</div>
     <div class="caso" id="stCaso"></div>
   </div>
   <div class="stats">
-    <div class="stat"><div class="n" id="nConn">0</div><div class="l">Conectados</div></div>
-    <div class="stat"><div class="n" id="nRap" style="color:var(--teal)">0</div><div class="l">⚡ Rápido</div></div>
-    <div class="stat"><div class="n" id="nCon" style="color:var(--green)">0</div><div class="l">🛡️ Control</div></div>
+    <div class="stat card"><div class="n" id="nConn">0</div><div class="l">Conectados</div></div>
+    <div class="stat card"><div class="n" id="nRap" style="color:var(--teal)">0</div><div class="l">⚡ Rápido</div></div>
+    <div class="stat card"><div class="n" id="nCon" style="color:var(--green)">0</div><div class="l">🛡️ Control</div></div>
   </div>
   <button class="btn ghost mini" id="rosterBtn" onclick="toggleRoster()">👥 Ver integrantes de los equipos</button>
   <div id="roster"></div>
   <div id="varInfo"></div>
   <div class="actions" id="actions"></div>
-  <div class="cfg">⏱ Duración por pregunta
-    <input id="dur" type="number" min="5" max="120" value="15"> seg</div>
-  <details><summary>Herramientas</summary>
+  <div class="cfg card">
+    <div>⏱ Duración por pregunta</div>
+    <div class="chips" id="durchips"></div>
+    <div class="custom">otro: <input id="dur" type="number" min="5" max="120" value="15"> seg</div>
+  </div>
+  <details class="card"><summary>🛠️ Herramientas</summary>
     <div class="actions" style="margin-top:10px">
       <button class="btn ghost mini" onclick="exportar()">⬇️ Exportar analítica (JSON)</button>
-      <button class="btn ghost mini" onclick="atras()">↩️ Atrás (corregir estado)</button>
+      <button class="btn ghost mini" onclick="if(confirm('¿Retroceder un paso para corregir el estado?'))atras()">↩️ Atrás (corregir estado)</button>
       <button class="btn ghost mini danger" onclick="reiniciar()">🗑️ Reiniciar evento</button>
     </div>
   </details>
   <div id="cfgnote"></div>
 </div>
+<div id="dock"><div id="prim"></div></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -192,8 +224,15 @@ function revelar(){
   });
 }
 
-let rosterOpen = false;
+let rosterOpen = false, overlaysOpen = false;
 function toggleRoster(){ rosterOpen = !rosterOpen; renderRoster(); }
+function buildDurChips(){
+  const wrap=document.getElementById("durchips"); const inp=document.getElementById("dur");
+  if(!wrap||!inp) return; wrap.innerHTML="";
+  [10,15,20,30].forEach(v=>{ const c=document.createElement("div");
+    c.className="chip"+(parseInt(inp.value)===v?" active":""); c.textContent=v+"s";
+    c.onclick=()=>{ inp.value=v; buildDurChips(); }; wrap.appendChild(c); });
+}
 function renderRoster(){
   const el = document.getElementById("roster"); if(!el) return;
   const btn = document.getElementById("rosterBtn");
@@ -245,9 +284,12 @@ function exportar(){
 }
 
 function render(){
-  document.getElementById("ponenteTag").textContent = EV.ponente
-    ? ("🎤 Ponente: " + (EV.ponente==="villar"?"Dra. Villar":"Dr. Cerda"))
-    : "🎤 Ponente: sin seleccionar (elígelo antes de iniciar)";
+  const pt=document.getElementById("ponenteTag");
+  if(EV.ponente){
+    pt.innerHTML = `<img src="../assets/arbitro-${EV.ponente}.png" alt=""><span>🏁 Árbitro Oficial del Encuentro<br><b>${EV.ponente==="villar"?"Dra. Alicia Villar":"Dr. Eduardo Cerda"}</b></span>`;
+  } else {
+    pt.innerHTML = `<span>🎤 Árbitro sin seleccionar — elígelo antes de iniciar</span>`;
+  }
   document.getElementById("stName").textContent = ST_NOMBRE[EV.estado]||EV.estado;
   document.getElementById("stCaso").textContent =
     (EV.estado==="lobby"||EV.estado==="final"||EV.estado==="presentacion") ? ""
@@ -262,78 +304,82 @@ function render(){
   vi.innerHTML = (EV.estado==="resultado" && nv) ? `<div class="varbox pulse">🚨 VAR solicitado por ${nv} médico(s)</div>` : "";
 
   const a=document.getElementById("actions"); a.innerHTML="";
+  const prim=document.getElementById("prim"); prim.innerHTML="";
   function add(label, fn, cls){ const b=document.createElement("button");
-    b.className="btn lg wide"+(cls?(" "+cls):""); b.textContent=label; b.onclick=fn; a.appendChild(b); }
-  function addP(label, fn, cls){ add(label, fn, "primary"+(cls?(" "+cls):"")); }
-  function sep(){ const d=document.createElement("div"); d.className="sep"; a.appendChild(d); }
+    b.className="btn "+(cls||"ghost mini"); b.textContent=label; b.onclick=fn; a.appendChild(b); return b; }
+  function addP(label, fn, cls){ const b=document.createElement("button");
+    b.className="btn primary"+(cls?(" "+cls):""); b.textContent=label; b.onclick=fn; prim.appendChild(b); return b; }
 
-  // 1) BOTÓN PRINCIPAL (siempre primero, el más vistoso)
+  // ===== BOTÓN PRINCIPAL (dock fijo abajo) ===== (.go = verde "avanzar")
   switch(EV.estado){
-    case "lobby":      addP("▶️ Iniciar", ()=>setEstado("presentacion",{caso_actual:1, modo:null, penal:null})); break;
-    case "presentacion": addP("Contexto Caso 1 →", ()=>setEstado("contexto",{ctx_slide:0})); break;
-    case "contexto":   addP("Mostrar cortinilla pregunta "+(EV.caso_actual||1)+" →", ()=>setEstado("cortinilla")); break;
-    case "cortinilla": addP("Mostrar pregunta "+(EV.caso_actual||1)+" →", ()=>setEstado("pregunta")); break;
-    case "pregunta":   addP("Mostrar opciones →", ()=>setEstado("opciones")); break;
+    case "lobby":      addP("▶️ Iniciar", ()=>{ if(!EV.ponente && !confirm("No has elegido árbitro. ¿Iniciar de todos modos?")) return; setEstado("presentacion",{caso_actual:1, modo:null, penal:null}); }, "go"); break;
+    case "presentacion": addP("Contexto Caso 1 →", ()=>setEstado("contexto",{ctx_slide:0}), "go"); break;
+    case "contexto":   addP("Mostrar cortinilla pregunta "+(EV.caso_actual||1)+" →", ()=>setEstado("cortinilla"), "go"); break;
+    case "cortinilla": addP("Mostrar pregunta "+(EV.caso_actual||1)+" →", ()=>setEstado("pregunta"), "go"); break;
+    case "pregunta":   addP("Mostrar opciones →", ()=>setEstado("opciones"), "go"); break;
     case "opciones":   addP("⏱ Iniciar cronómetro", abrirRespuestas); break;
     case "responder":  addP("Cerrar tiempo (silbato)", cerrarTiempo); break;
-    case "bloqueo":    addP("Revelar resultado ⚽", revelar); break;
+    case "bloqueo":    addP("Revelar resultado ⚽", revelar, "go"); break;
     case "resultado":
-      if(enPenales()) addP((EV.penal||1)>=PENALES.length ? "🏆 Ver ganador →" : "Siguiente penal →", siguiente);
+      if(enPenales()) addP((EV.penal||1)>=PENALES.length ? "🏆 Ver ganador →" : "Siguiente penal →", siguiente, "go");
       else addP("🟥 Ver VAR pregunta "+(EV.caso_actual||1), ()=>setEstado("var",{var_slide:0}));
       break;
     case "var":
       if(ultimaPreg()) addP("🥅 Ir a penales →", siguiente);
-      else if(finCaso1()) addP("⏸️ Final primer tiempo →", siguiente);
-      else addP("Mostrar cortinilla pregunta "+((EV.caso_actual||1)+1)+" →", siguiente);
+      else if(finCaso1()) addP("⏸️ Final primer tiempo →", siguiente, "go");
+      else addP("Mostrar cortinilla pregunta "+((EV.caso_actual||1)+1)+" →", siguiente, "go");
       break;
     case "transicion":
-      if(EV.trans==="final1T") addP("▶️ Inicio segundo tiempo →", ()=>setEstado("transicion",{trans:"inicio2T"}));
-      else addP("Contexto Caso 2 →", ()=>setEstado("contexto",{caso_actual:5, ctx_slide:0}));
+      if(EV.trans==="final1T") addP("▶️ Inicio segundo tiempo →", ()=>setEstado("transicion",{trans:"inicio2T"}), "go");
+      else addP("Contexto Caso 2 →", ()=>setEstado("contexto",{caso_actual:5, ctx_slide:0}), "go");
       break;
-    case "penintro":   addP("Iniciar penal "+(EV.penal||1)+" →", ()=>db.ref("evento").update({estado:"pregunta", empate:false})); break;
-    case "final":      addP("👋 Reproducir despedida →", ()=>setEstado("despedida")); break;
+    case "penintro":   addP("Iniciar penal "+(EV.penal||1)+" →", ()=>db.ref("evento").update({estado:"pregunta", empate:false}), "go"); break;
+    case "final":      addP("👋 Reproducir despedida →", ()=>setEstado("despedida"), "go"); break;
     case "despedida":  addP("🔄 Nuevo partido (reiniciar)", reiniciar, "danger"); break;
   }
-  // Carrusel (◀ anterior / siguiente ▶) JUSTO debajo del botón principal
+  // Carrusel (◀ anterior / siguiente ▶) JUSTO debajo del botón principal, dentro del dock
   if(EV.estado==="contexto" || EV.mostrar_contexto){ const n=(CONTEXTO_CASO[casoClinico()]||[]).length; if(n>1) navSlides("ctx_slide", n); }
   if(EV.estado==="var"){ const vm=(preg().var_media)||[]; if(vm.length>1) navSlides("var_slide", vm.length); }
-  // Atrás (deshacer)
-  if(ATRAS[EV.estado]){ add("↩️ Atrás (undo)", atras, "ghost mini"); }
 
-  sep();
-  // 2) Selección del ponente (solo en lobby). La presentación se reproduce con "Iniciar".
+  // ===== CONTROLES SECUNDARIOS (cuerpo, con scroll) =====
+  // Selección de árbitro (solo en lobby sin árbitro)
   if(EV.estado==="lobby" && !EV.ponente){
-    add("👤 Elegir ponente: Dra. Villar", ()=>db.ref("evento/ponente").set("villar"), "ghost");
-    add("👤 Elegir ponente: Dr. Cerda", ()=>db.ref("evento/ponente").set("cerda"), "ghost");
+    add("👤 Elegir árbitro: Dra. Villar", ()=>db.ref("evento/ponente").set("villar"), "ghost");
+    add("👤 Elegir árbitro: Dr. Cerda", ()=>db.ref("evento/ponente").set("cerda"), "ghost");
   }
-  // 3) Lanzadores secundarios (siempre disponibles, en chico)
-  add(EV.mostrar_qr?"🙈 Ocultar QR":"📲 Mostrar QR de acceso",
-      ()=>db.ref("evento/mostrar_qr").set(!EV.mostrar_qr), "ghost mini");
-  add(EV.musica?"⏹️ Detener video musical":"🎵 Lanzar video musical",
-      ()=>lanzarOverlay("musica"), "ghost mini");
-  add(EV.loop_full?"⏹️ Detener loop":"🎬 Lanzar loop (sin sonido)",
-      ()=>lanzarOverlay("loop_full"), "ghost mini");
-  add(EV.empate?"⏹️ Detener 'Vamos a penales'":"🥅 Vamos a penales (video)",
-      ()=>lanzarOverlay("empate"), "ghost mini");
-  function navSlides(field, n){   // botones ◀ anterior / siguiente ▶ con wrap
-    const cur = EV[field]||0;
-    const row = document.createElement("div"); row.className="row"; a.appendChild(row);
-    const mk=(label,to)=>{ const x=document.createElement("button"); x.className="btn ghost mini"; x.textContent=label;
-      x.onclick=()=>db.ref("evento/"+field).set(((to)%n+n)%n); row.appendChild(x); };
-    mk("◀ Anterior", cur-1);
-    const lbl=document.createElement("div"); lbl.style.cssText="flex:0 0 auto;align-self:center;font-weight:800;color:var(--muted);font-size:13px;padding:0 4px";
-    lbl.textContent=(cur+1)+"/"+n; row.appendChild(lbl);
-    mk("Siguiente ▶", cur+1);
-  }
-  // Ver contexto a demanda durante las preguntas (los slides ya se navegan arriba)
+  // Ver contexto a demanda durante las preguntas
   const ncx = (CONTEXTO_CASO[casoClinico()]||[]).length;
   if(!enPenales() && ncx && ["cortinilla","pregunta","opciones","responder","bloqueo","resultado","var"].includes(EV.estado)){
     add(EV.mostrar_contexto?"🙈 Ocultar contexto":"👁 Ver contexto", toggleContexto, "ghost mini");
   }
-  // 4) Cambiar ponente: hasta abajo (solo en lobby con ponente)
+  // Atrás (deshacer) durante el flujo
+  if(ATRAS[EV.estado] || (enPenales() && ["pregunta","opciones","responder","bloqueo","resultado"].includes(EV.estado))){
+    add("↩️ Atrás (undo)", atras, "ghost mini");
+  }
+  // Cambiar árbitro (lobby con árbitro)
   if(EV.estado==="lobby" && EV.ponente){
-    sep();
-    add("🔁 Cambiar ponente", ()=>{ db.ref("evento/presentacion").set(null); db.ref("evento/ponente").set(null); }, "ghost mini");
+    add("🔁 Cambiar árbitro", ()=>{ db.ref("evento/presentacion").set(null); db.ref("evento/ponente").set(null); }, "ghost mini");
+  }
+  // Overlays en pantalla (agrupados/plegables)
+  const det=document.createElement("details"); det.className="card"; det.open=overlaysOpen;
+  det.addEventListener("toggle",()=>{ overlaysOpen=det.open; });
+  const sum=document.createElement("summary"); sum.textContent="🎬 Overlays en pantalla"; det.appendChild(sum);
+  const box=document.createElement("div"); box.className="actions"; box.style.marginTop="10px"; det.appendChild(box);
+  const ov=(label,fn,cls)=>{ const b=document.createElement("button"); b.className="btn ghost mini"+(cls?" "+cls:""); b.textContent=label; b.onclick=fn; box.appendChild(b); };
+  ov(EV.mostrar_qr?"🙈 Ocultar QR":"📲 Mostrar QR de acceso", ()=>db.ref("evento/mostrar_qr").set(!EV.mostrar_qr));
+  ov(EV.musica?"⏹️ Detener video musical":"🎵 Lanzar video musical", ()=>lanzarOverlay("musica"));
+  ov(EV.loop_full?"⏹️ Detener loop":"🎬 Lanzar loop (sin sonido)", ()=>lanzarOverlay("loop_full"));
+  ov(EV.empate?"⏹️ Detener 'Vamos a penales'":"🥅 Vamos a penales (video)", ()=>lanzarOverlay("empate"));
+  a.appendChild(det);
+
+  function navSlides(field, n){   // ◀ Anterior / x/N / Siguiente ▶ — dentro del dock, bajo el principal
+    const cur = EV[field]||0;
+    const row = document.createElement("div"); row.className="navrow"; prim.appendChild(row);
+    const mk=(label,to)=>{ const x=document.createElement("button"); x.className="btn"; x.textContent=label;
+      x.onclick=()=>db.ref("evento/"+field).set(((to)%n+n)%n); row.appendChild(x); };
+    mk("◀ Anterior", cur-1);
+    const lbl=document.createElement("div"); lbl.className="navlbl"; lbl.textContent=(cur+1)+"/"+n; row.appendChild(lbl);
+    mk("Siguiente ▶", cur+1);
   }
 }
 
@@ -345,6 +391,13 @@ fbOnReady(()=>{
   db.ref("jugadores").on("value", s=>{ JUG=s.val()||{}; render(); renderRoster(); });
   db.ref("var_solicitudes").on("value", s=>{ VARS=s.val()||{}; render(); });
 });
+// Feedback táctil al pulsar cualquier botón
+document.addEventListener("pointerdown", e=>{
+  if(e.target.closest && e.target.closest(".btn") && navigator.vibrate){ try{ navigator.vibrate(12); }catch(_){} }
+});
+// Chips de duración
+buildDurChips();
+document.getElementById("dur").addEventListener("input", buildDurChips);
 render();
 </script>
 </body></html>
