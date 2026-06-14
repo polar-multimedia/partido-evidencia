@@ -96,21 +96,45 @@ const CASOS = [
 
   /* ---------- CASO CLÍNICO 2 (textos y VAR PENDIENTES) ---------- */
   { id:5, caso_clinico:2, cortinilla:"cortinilla5.mp4",
-    pregunta:"(Pregunta 5 — pendiente de texto)",
-    opciones:{ A:"(pendiente)", B:"(pendiente)", C:"(pendiente)", D:"(pendiente)" },
-    correcta:"A", mensaje_clave:"", var_media:[], fuentes:[], validado:false },
+    pregunta:"¿Es reflujo refractario?",
+    opciones:{
+      A:"Sí, porque ya tomó bien el IBP y no responde",
+      B:"Hasta ahora solo puedo decir que tiene síntomas sugerentes de ERGE que no responden a IBP",
+      C:"Es obligatorio realizar una Panendoscopia",
+      D:"Eso solo se puede saber después de la pH-metría con impedancia"
+    },
+    correcta:"B", mensaje_clave:"",
+    var_media:["A","B","C"].map(L=>({type:"img",src:"VAR-pregunta5"+L+".png"})), fuentes:[], validado:true },
   { id:6, caso_clinico:2, cortinilla:"cortinilla6.mp4",
-    pregunta:"(Pregunta 6 — pendiente de texto)",
-    opciones:{ A:"(pendiente)", B:"(pendiente)", C:"(pendiente)", D:"(pendiente)" },
-    correcta:"A", mensaje_clave:"", var_media:[], fuentes:[], validado:false },
+    pregunta:"¿Qué medida proponen?",
+    opciones:{
+      A:"Doblan dosis de IBP",
+      B:"Cambian de IBP",
+      C:"Inician Tegoprazán 50 mg al día",
+      D:"Realizan Panendoscopia"
+    },
+    correcta:"C", mensaje_clave:"",
+    var_media:["A","B","C"].map(L=>({type:"img",src:"VAR-pregunta6"+L+".png"})), fuentes:[], validado:true },
   { id:7, caso_clinico:2, cortinilla:"cortinilla7.mp4",
-    pregunta:"(Pregunta 7 — pendiente de texto)",
-    opciones:{ A:"(pendiente)", B:"(pendiente)", C:"(pendiente)", D:"(pendiente)" },
-    correcta:"A", mensaje_clave:"", var_media:[], fuentes:[], validado:false },
+    pregunta:"¿Según Lyon 2.0, se confirma ERGE?",
+    opciones:{
+      A:"Sí porque tiene hernia hiatal de 2-3 cm",
+      B:"Sí porque tiene esofagitis A",
+      C:"Sí porque tiene esofagitis C",
+      D:"No porque no tiene BARRETT"
+    },
+    correcta:"C", mensaje_clave:"",
+    var_media:["A","B","C","D"].map(L=>({type:"img",src:"VAR-pregunta7"+L+".png"})), fuentes:[], validado:true },
   { id:8, caso_clinico:2, cortinilla:"cortinilla8.mp4",
-    pregunta:"(Pregunta 8 — pendiente de texto)",
-    opciones:{ A:"(pendiente)", B:"(pendiente)", C:"(pendiente)", D:"(pendiente)" },
-    correcta:"A", mensaje_clave:"", var_media:[], fuentes:[], validado:false }
+    pregunta:"¿Ahora qué le hacemos?",
+    opciones:{
+      A:"Le inician tegoprazán 50 mg cada 24 hs",
+      B:"Le inician tegoprazán 50 mg cada 12 hs",
+      C:"Le hacen pH-impedancia con IBP",
+      D:"Le hacen pH-impedancia sin IBP"
+    },
+    correcta:"A", mensaje_clave:"",
+    var_media:"ABCDEFGHIJKLMNOPQRSTUVWXY".split("").map(L=>({type:"img",src:"VAR-pregunta8"+L+".png"})), fuentes:[], validado:true }
 ];
 
 /* ===== PENALES: 5 preguntas fijas (no modificar el texto) ===== */

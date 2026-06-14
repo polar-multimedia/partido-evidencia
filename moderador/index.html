@@ -318,19 +318,25 @@ function render(){
       ()=>lanzarOverlay("loop_full"), "ghost mini");
   add(EV.empate?"⏹️ Detener 'Vamos a penales'":"🥅 Vamos a penales (video)",
       ()=>lanzarOverlay("empate"), "ghost mini");
-  const ncx = (CONTEXTO_CASO[casoClinico()]||[]).length;
-  // avanzar slide del carrusel de contexto (en el paso de contexto o en el overlay a demanda)
-  if((EV.estado==="contexto" || EV.mostrar_contexto) && ncx>1){
-    const cur=(EV.ctx_slide||0);
-    add("🖼️ Contexto "+(cur+1)+"/"+ncx+" — siguiente slide →", ()=>db.ref("evento/ctx_slide").set((cur+1)%ncx), "ghost mini");
+  function navSlides(field, n){   // botones ◀ anterior / siguiente ▶ con wrap
+    const cur = EV[field]||0;
+    const row = document.createElement("div"); row.className="row"; a.appendChild(row);
+    const mk=(label,to)=>{ const x=document.createElement("button"); x.className="btn ghost mini"; x.textContent=label;
+      x.onclick=()=>db.ref("evento/"+field).set(((to)%n+n)%n); row.appendChild(x); };
+    mk("◀ Anterior", cur-1);
+    const lbl=document.createElement("div"); lbl.style.cssText="flex:0 0 auto;align-self:center;font-weight:800;color:var(--muted);font-size:13px;padding:0 4px";
+    lbl.textContent=(cur+1)+"/"+n; row.appendChild(lbl);
+    mk("Siguiente ▶", cur+1);
   }
+  const ncx = (CONTEXTO_CASO[casoClinico()]||[]).length;
+  // carrusel de contexto (paso de contexto o overlay a demanda)
+  if((EV.estado==="contexto" || EV.mostrar_contexto) && ncx>1) navSlides("ctx_slide", ncx);
   // Ver contexto a demanda durante las preguntas
   if(!enPenales() && ncx && ["cortinilla","pregunta","opciones","responder","bloqueo","resultado","var"].includes(EV.estado)){
     add(EV.mostrar_contexto?"🙈 Ocultar contexto":"👁 Ver contexto", toggleContexto, "ghost mini");
   }
-  // avanzar slide del carrusel del VAR
-  if(EV.estado==="var"){ const vm=(preg().var_media)||[]; if(vm.length>1){ const cur=EV.var_slide||0;
-    add("🖼️ VAR "+(cur+1)+"/"+vm.length+" — siguiente slide →", ()=>db.ref("evento/var_slide").set((cur+1)%vm.length), "ghost mini"); } }
+  // carrusel del VAR
+  if(EV.estado==="var"){ const vm=(preg().var_media)||[]; if(vm.length>1) navSlides("var_slide", vm.length); }
   // 4) Cambiar ponente: hasta abajo (solo en lobby con ponente)
   if(EV.estado==="lobby" && EV.ponente){
     sep();
