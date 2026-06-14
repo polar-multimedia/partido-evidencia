@@ -76,6 +76,9 @@
   /* Transición suave al cambiar de slide (contexto / VAR) */
   @keyframes slidein{from{opacity:0;transform:scale(1.015)}to{opacity:1;transform:scale(1)}}
   .slidefx{animation:slidein .42s ease}
+  /* Pantalla ¡Tiempo! con foto del árbitro */
+  .tiempo-solo{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .tiempo-arb{height:320px;width:auto;filter:drop-shadow(0 14px 30px rgba(0,0,0,.6))}
   .evid{max-width:1280px;text-align:left;background:rgba(18,26,38,.9);border:1px solid var(--line);
     border-radius:22px;padding:30px 38px}
   .evidrow{display:flex;gap:26px;align-items:center}
@@ -391,7 +394,13 @@ function render(){
         <div class="q">${escapeHTML(c.pregunta)}</div></div>
       <div class="muted" style="font-size:22px;margin-top:18px">El ponente está leyendo la pregunta…</div>`;
   }
-  else if(e==="opciones" || e==="responder" || e==="bloqueo" || e==="resultado"){
+  else if(e==="bloqueo"){
+    const arb = STATE.evento.ponente ? `<img class="tiempo-arb" src="../assets/arbitro-${STATE.evento.ponente}.png" alt="">` : WHISTLE;
+    scene.innerHTML = `<div class="tiempo-solo pop">${arb}
+      <div class="big" style="font-size:96px;line-height:1">¡Tiempo!</div>
+      <div class="muted" style="font-size:26px">El árbitro cierra las respuestas</div></div>`;
+  }
+  else if(e==="opciones" || e==="responder" || e==="resultado"){
     const showTimer = (e==="responder");
     const reveal = (e==="resultado");
     let html = "";
@@ -403,7 +412,6 @@ function render(){
         html += `<div class="big pop" style="font-size:50px">Jugada pareja — sin gol</div>`;
       }
     }
-    else if(e==="bloqueo"){ html += `<div class="big pop" style="font-size:54px">${WHISTLE}¡Tiempo!</div>`; }
     else { html += `<div class="q" style="font-size:40px;font-weight:800;max-width:1180px;line-height:1.3;letter-spacing:.005em">${escapeHTML(c.pregunta)}</div>`; }
     if(showTimer){ html += `<div id="timer" class="timer">--</div>`; }
     html += `<div class="opts">` + opcionKeys(c).map(k=>{
