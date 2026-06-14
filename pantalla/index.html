@@ -70,6 +70,9 @@
     padding:12px 28px 12px 16px;font-size:24px;font-weight:600;color:#eaf7fb;text-align:left}
   .ponente-chip .arb-foto{height:96px;width:auto;display:block}
   .ponente-chip b{color:var(--teal);font-size:28px}
+  .okmark{margin-left:auto;flex:0 0 auto;background:var(--green);color:#06210a;font-weight:900;
+    font-size:20px;padding:8px 18px;border-radius:999px;letter-spacing:.04em;white-space:nowrap;
+    box-shadow:0 4px 16px rgba(140,224,33,.5)}
   .evid{max-width:1280px;text-align:left;background:rgba(18,26,38,.9);border:1px solid var(--line);
     border-radius:22px;padding:30px 38px}
   .evidrow{display:flex;gap:26px;align-items:center}
@@ -402,7 +405,7 @@ function render(){
     html += `<div class="opts">` + opcionKeys(c).map(k=>{
       const isCorrect = reveal && esCorrecta(c,k);
       return `<button class="opt" ${isCorrect?'data-correct="1"':''} ${reveal&&!isCorrect?'data-wrong="1"':''} disabled>
-        <span class="k ${k}">${k}</span><span>${escapeHTML(c.opciones[k])}</span></button>`;
+        <span class="k ${k}">${k}</span><span>${escapeHTML(c.opciones[k])}</span>${isCorrect?'<span class="okmark">✓ RESPUESTA CORRECTA</span>':''}</button>`;
     }).join("") + `</div>`;
     if(showTimer){ html += `<div class="countbar"><b id="cnt">0</b> de ${nConectados()} respondieron</div>`; }
     if(reveal){
