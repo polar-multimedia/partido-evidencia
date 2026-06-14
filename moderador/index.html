@@ -294,7 +294,10 @@ function render(){
     case "final":      addP("👋 Reproducir despedida →", ()=>setEstado("despedida")); break;
     case "despedida":  addP("🔄 Nuevo partido (reiniciar)", reiniciar, "danger"); break;
   }
-  // Atrás (deshacer) justo bajo el principal
+  // Carrusel (◀ anterior / siguiente ▶) JUSTO debajo del botón principal
+  if(EV.estado==="contexto" || EV.mostrar_contexto){ const n=(CONTEXTO_CASO[casoClinico()]||[]).length; if(n>1) navSlides("ctx_slide", n); }
+  if(EV.estado==="var"){ const vm=(preg().var_media)||[]; if(vm.length>1) navSlides("var_slide", vm.length); }
+  // Atrás (deshacer)
   if(ATRAS[EV.estado]){ add("↩️ Atrás (undo)", atras, "ghost mini"); }
 
   sep();
@@ -322,15 +325,11 @@ function render(){
     lbl.textContent=(cur+1)+"/"+n; row.appendChild(lbl);
     mk("Siguiente ▶", cur+1);
   }
+  // Ver contexto a demanda durante las preguntas (los slides ya se navegan arriba)
   const ncx = (CONTEXTO_CASO[casoClinico()]||[]).length;
-  // carrusel de contexto (paso de contexto o overlay a demanda)
-  if((EV.estado==="contexto" || EV.mostrar_contexto) && ncx>1) navSlides("ctx_slide", ncx);
-  // Ver contexto a demanda durante las preguntas
   if(!enPenales() && ncx && ["cortinilla","pregunta","opciones","responder","bloqueo","resultado","var"].includes(EV.estado)){
     add(EV.mostrar_contexto?"🙈 Ocultar contexto":"👁 Ver contexto", toggleContexto, "ghost mini");
   }
-  // carrusel del VAR
-  if(EV.estado==="var"){ const vm=(preg().var_media)||[]; if(vm.length>1) navSlides("var_slide", vm.length); }
   // 4) Cambiar ponente: hasta abajo (solo en lobby con ponente)
   if(EV.estado==="lobby" && EV.ponente){
     sep();
