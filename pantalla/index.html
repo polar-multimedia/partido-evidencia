@@ -154,7 +154,7 @@ const silbato = new Audio("../assets/silbato.mp3");
 silbato.preload = "auto";
 const reloj = new Audio("../assets/reloj.mp3");
 reloj.preload = "auto"; reloj.loop = true;
-let lastWhistleState = null, varTimer = null, alarmTimer = null;
+let lastWhistleState = null, varTimer = null, alarmTimer = null, lastSceneKey = "__none__";
 const WHISTLE = '<svg viewBox="0 0 64 40" width="78" height="48" style="vertical-align:-10px;margin-right:8px"><path fill="#f2b53b" d="M2 12h26l12-7v10h16a7 7 0 0 1 0 14H40v9l-12-7H22A18 18 0 1 1 2 12z"/><circle cx="22" cy="22" r="9" fill="#0a0e15"/></svg>';
 cortvid.addEventListener("error", ()=>cortvid.classList.remove("show"));  // si falla, cae a cortinilla CSS
 cortvid.addEventListener("ended", ()=>{ /* mantiene último cuadro hasta que el operador avance */ });
@@ -319,12 +319,18 @@ function render(){
   renderLoopFull();
   renderPresenta();
   renderEmpate();
-  // Si un overlay de video cubre la pantalla, silencia/pausa el video de la escena (evita audio cruzado)
-  const takeover = STATE.evento.loop_full || STATE.evento.musica || STATE.evento.empate || STATE.evento.presentacion;
-  document.querySelectorAll("#scene video").forEach(v=>{ if(takeover){ v.muted=true; try{v.pause();}catch(_){}} });
   const c = preguntaActual();
   if(timerInt){ clearInterval(timerInt); timerInt=null; }
 
+  // La escena con video (presentación/contexto/transición) NO debe reconstruirse en cada
+  // instrucción de Firebase, porque eso reinicia el video desde 0. Solo se reconstruye
+  // cuando realmente cambia el estado/slide/ponente.
+  const videoEscena = (e==="presentacion" || e==="contexto" || e==="transicion");
+  const sceneKey = [e, STATE.evento.caso_actual, STATE.evento.ctx_slide, STATE.evento.trans, STATE.evento.ponente].join("|");
+  const skipScene = videoEscena && sceneKey===lastSceneKey;
+  lastSceneKey = sceneKey;
+
+  if(!skipScene){
   if(e==="lobby"){
     scene.innerHTML = `
       <div class="lobbybanner" style="margin-top:-20px">
@@ -460,6 +466,15 @@ function render(){
     scene.innerHTML = `<div class="big pop" style="font-size:56px">¡Gracias por jugar!</div>
       <div class="msgkey" style="margin-top:18px">Ki-CAB · La evidencia entra a la cancha</div>`;
   }
+  } // fin if(!skipScene)
+
+  // Si un overlay de video cubre la pantalla, silencia/pausa el video de la escena (evita audio
+  // cruzado). Al quitar el overlay, el video de la escena se reanuda donde quedó (sin reiniciar).
+  const takeover = STATE.evento.loop_full || STATE.evento.musica || STATE.evento.empate || (STATE.evento.presentacion==="villar"||STATE.evento.presentacion==="cerda");
+  document.querySelectorAll("#scene video").forEach(v=>{
+    if(takeover){ v.muted=true; try{v.pause();}catch(_){} }
+    else if(videoEscena){ v.muted=false; try{ if(v.paused) v.play().catch(()=>{}); }catch(_){} }
+  });
 }
 
 function startTimer(){
