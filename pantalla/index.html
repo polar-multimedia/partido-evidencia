@@ -65,10 +65,11 @@
   .countbar{margin-top:26px;font-size:24px;color:var(--muted)}
   .msgkey{margin-top:22px;background:rgba(140,224,33,.12);border:1px solid rgba(140,224,33,.4);
     border-radius:16px;padding:20px 28px;font-size:26px;font-weight:700;max-width:1100px}
-  .ponente-chip{margin-top:18px;display:inline-block;background:rgba(25,195,214,.16);
-    border:1px solid rgba(25,195,214,.5);border-radius:999px;padding:12px 30px;font-size:26px;
-    font-weight:700;color:#eaf7fb}
-  .ponente-chip b{color:var(--teal)}
+  .ponente-chip{margin-top:18px;display:inline-flex;align-items:center;gap:18px;
+    background:rgba(25,195,214,.16);border:1px solid rgba(25,195,214,.5);border-radius:24px;
+    padding:12px 28px 12px 16px;font-size:24px;font-weight:600;color:#eaf7fb;text-align:left}
+  .ponente-chip .arb-foto{height:96px;width:auto;display:block}
+  .ponente-chip b{color:var(--teal);font-size:28px}
   .evid{max-width:1280px;text-align:left;background:rgba(18,26,38,.9);border:1px solid var(--line);
     border-radius:22px;padding:30px 38px}
   .evidrow{display:flex;gap:26px;align-items:center}
@@ -352,7 +353,7 @@ function render(){
       <div class="tag">La evidencia entra a la cancha</div>
       <h1 class="brand" style="font-size:64px;margin:6px 0 0">El Partido <span class="kc">de la Evidencia</span></h1>
       <div style="margin-top:10px;font-size:18px" class="muted">${nConectados()} médicos conectados</div>
-      ${STATE.evento.ponente ? `<div class="ponente-chip pop">${WHISTLE} Árbitro Oficial del Encuentro: <b>${STATE.evento.ponente==="cerda"?"Dr. Cerda":"Dra. Villar"}</b></div>` : ""}`;
+      ${STATE.evento.ponente ? `<div class="ponente-chip pop"><img class="arb-foto" src="../assets/arbitro-${STATE.evento.ponente}.png" alt=""><span>Árbitro Oficial del Encuentro:<br><b>${STATE.evento.ponente==="cerda"?"Dr. Eduardo Cerda":"Dra. Alicia Villar"}</b></span></div>` : ""}`;
   }
   else if(e==="cortinilla"){
     scene.innerHTML = `<div class="tag">La evidencia entra a la cancha</div>
