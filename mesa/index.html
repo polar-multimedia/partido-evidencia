@@ -81,6 +81,27 @@
   .bnav span{opacity:.45}
   .bnav .bnav-c{width:46px;height:46px;border-radius:50%;background:var(--red);color:#fff;display:grid;
     place-items:center;font-size:22px;opacity:1;box-shadow:0 6px 18px rgba(232,85,77,.4)}
+  /* ===== Lenguaje visual unificado: glass + glows + feedback ===== */
+  body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(120% 70% at 0% 0%, rgba(25,195,214,.16), transparent 46%),
+               radial-gradient(120% 70% at 100% 100%, rgba(255,140,90,.15), transparent 46%)}
+  .field,.mcase,.teamsel button,.tcard,.react button{
+    background:rgba(20,28,42,.80)!important;border:1px solid rgba(255,255,255,.08)!important;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  .field{border-radius:16px}
+  .mcase{border-radius:18px}
+  .teamsel button{border-radius:18px}
+  .teamsel button[data-sel="1"]{border-color:var(--green)!important;background:rgba(84,196,180,.14)!important;
+    box-shadow:0 0 0 1px var(--green),0 0 22px rgba(84,196,180,.28)}
+  .tcard[data-sel="1"]{border-color:var(--green)!important}
+  .opt{background:rgba(20,28,42,.80)!important;border:1px solid rgba(255,255,255,.10)!important;
+    border-radius:16px!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  .opt[data-sel="1"]{border-color:var(--green)!important;background:rgba(84,196,180,.16)!important;
+    box-shadow:0 0 0 1px var(--green),0 0 22px rgba(84,196,180,.28)}
+  .opt[data-correct="1"]{border-color:var(--green)!important;background:rgba(84,196,180,.18)!important}
+  .opt[data-wrong="1"]{border-color:var(--navy)!important;opacity:.6}
+  .btn{border-radius:16px;transition:transform .08s ease,box-shadow .2s}
+  .btn:active,.opt:active,.teamsel button:active,.tcard:active{transform:scale(.97)}
 </style>
 </head><body>
 <div id="app">
@@ -322,6 +343,10 @@ fbOnReady(()=>{
       if(r.exists() && (EV.estado==="responder"||EV.estado==="bloqueo"||EV.estado==="resultado")){ miRespuesta=r.val().opcion; if(EV.estado==="responder") marcarSel(); }
     });
   });
+});
+// Feedback táctil al pulsar botones/opciones
+document.addEventListener("pointerdown", e=>{
+  if(e.target.closest && e.target.closest(".btn,.opt,.teamsel button,.tcard") && navigator.vibrate){ try{ navigator.vibrate(12); }catch(_){} }
 });
 render();
 </script>
