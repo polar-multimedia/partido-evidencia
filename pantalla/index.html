@@ -319,6 +319,9 @@ function render(){
   renderLoopFull();
   renderPresenta();
   renderEmpate();
+  // Si un overlay de video cubre la pantalla, silencia/pausa el video de la escena (evita audio cruzado)
+  const takeover = STATE.evento.loop_full || STATE.evento.musica || STATE.evento.empate || STATE.evento.presentacion;
+  document.querySelectorAll("#scene video").forEach(v=>{ if(takeover){ v.muted=true; try{v.pause();}catch(_){}} });
   const c = preguntaActual();
   if(timerInt){ clearInterval(timerInt); timerInt=null; }
 
