@@ -352,7 +352,7 @@ function render(){
       <div class="tag">La evidencia entra a la cancha</div>
       <h1 class="brand" style="font-size:64px;margin:6px 0 0">El Partido <span class="kc">de la Evidencia</span></h1>
       <div style="margin-top:10px;font-size:18px" class="muted">${nConectados()} médicos conectados</div>
-      ${STATE.evento.ponente ? `<div class="ponente-chip pop">🎤 Hoy presenta <b>${STATE.evento.ponente==="cerda"?"el Dr. Cerda":"la Dra. Villar"}</b></div>` : ""}`;
+      ${STATE.evento.ponente ? `<div class="ponente-chip pop">${WHISTLE} Árbitro Oficial del Encuentro: <b>${STATE.evento.ponente==="cerda"?"Dr. Cerda":"Dra. Villar"}</b></div>` : ""}`;
   }
   else if(e==="cortinilla"){
     scene.innerHTML = `<div class="tag">La evidencia entra a la cancha</div>

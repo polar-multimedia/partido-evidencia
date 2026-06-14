@@ -10,17 +10,19 @@
 /* Carrusel de contexto por caso clínico (el operador avanza los slides) */
 const CONTEXTO_CASO = {
   1: [
-    { type:"video", src:"caso1A.mp4" },
-    { type:"img",   src:"caso1B.jpeg" }
+    { type:"img",   src:"caso1A.png" },   // cartón título "Caso Clínico · Primer Tiempo"
+    { type:"video", src:"caso1B.mp4" },
+    { type:"img",   src:"caso1C.jpeg" }   // grid de endoscopía
   ],
   2: [
-    { type:"video", src:"caso2A.mp4" },
+    { type:"img",   src:"caso2A.png" },   // cartón título "Caso Clínico · Segundo Tiempo"
     { type:"video", src:"caso2B.mp4" },
-    { type:"img",   src:"caso-2C.png" },
-    { type:"img",   src:"caso-2D.png" },
-    { type:"img",   src:"caso-2E.png" },
-    { type:"img",   src:"caso-2F.png" },
-    { type:"img",   src:"caso-2G.png" }
+    { type:"video", src:"caso2C.mp4" },
+    { type:"img",   src:"caso2D.png" },   // Manejo inicial + Lyon 2.0
+    { type:"img",   src:"caso2E.png" },   // Comparación beneficio terapéutico
+    { type:"img",   src:"caso2F.png" },   // Uso racional de los IBP
+    { type:"img",   src:"caso2G.png" },   // Manejo inicial 30 min preprandial
+    { type:"img",   src:"caso2H.png" }    // Factores de falla de los IBP
   ]
 };
 
