@@ -73,6 +73,9 @@
   .okmark{margin-left:auto;flex:0 0 auto;background:var(--green);color:#06210a;font-weight:900;
     font-size:20px;padding:8px 18px;border-radius:999px;letter-spacing:.04em;white-space:nowrap;
     box-shadow:0 4px 16px rgba(140,224,33,.5)}
+  /* Transición suave al cambiar de slide (contexto / VAR) */
+  @keyframes slidein{from{opacity:0;transform:scale(1.015)}to{opacity:1;transform:scale(1)}}
+  .slidefx{animation:slidein .42s ease}
   .evid{max-width:1280px;text-align:left;background:rgba(18,26,38,.9);border:1px solid var(--line);
     border-radius:22px;padding:30px 38px}
   .evidrow{display:flex;gap:26px;align-items:center}
@@ -334,8 +337,9 @@ function render(){
   // instrucción de Firebase, porque eso reinicia el video desde 0. Solo se reconstruye
   // cuando realmente cambia el estado/slide/ponente.
   const videoEscena = (e==="presentacion" || e==="contexto" || e==="transicion");
-  const sceneKey = [e, STATE.evento.caso_actual, STATE.evento.ctx_slide, STATE.evento.trans, STATE.evento.ponente].join("|");
-  const skipScene = videoEscena && sceneKey===lastSceneKey;
+  const guardEscena = videoEscena || e==="var";   // var también: evita re-render/re-fade en cada instrucción
+  const sceneKey = [e, STATE.evento.caso_actual, STATE.evento.penal, STATE.evento.ctx_slide, STATE.evento.var_slide, STATE.evento.trans, STATE.evento.ponente].join("|");
+  const skipScene = guardEscena && sceneKey===lastSceneKey;
   lastSceneKey = sceneKey;
 
   if(!skipScene){
@@ -372,8 +376,8 @@ function render(){
     const idx = Math.min(STATE.evento.ctx_slide||0, media.length-1);
     const m = media[idx];
     scene.innerHTML = m
-      ? (m.type==="video" ? `<video class="varfull" src="../assets/${m.src}" autoplay loop playsinline></video>`
-                          : `<img class="varfull" src="../assets/${m.src}" alt="">`)
+      ? (m.type==="video" ? `<video class="varfull slidefx" src="../assets/${m.src}" autoplay loop muted playsinline></video>`
+                          : `<img class="varfull slidefx" src="../assets/${m.src}" alt="">`)
       : `<div class="big">Contexto Caso ${casoClinicoP()}</div>`;
   }
   else if(e==="transicion"){
@@ -437,8 +441,8 @@ function render(){
       const idx = Math.min(STATE.evento.var_slide||0, vm.length-1);
       const m = vm[idx] || vm[0];
       scene.innerHTML = m.type==="video"
-        ? `<video class="varfull" src="../assets/${m.src}" autoplay loop muted playsinline></video>`
-        : `<img class="varfull" src="../assets/${m.src}" alt="">`;
+        ? `<video class="varfull slidefx" src="../assets/${m.src}" autoplay loop muted playsinline></video>`
+        : `<img class="varfull slidefx" src="../assets/${m.src}" alt="">`;
     } else if(c.evidencia_imagen){
       scene.innerHTML = `<img class="varfull" src="../assets/${c.evidencia_imagen}" alt="">`;
     } else {
@@ -488,7 +492,7 @@ function render(){
   const takeover = STATE.evento.loop_full || STATE.evento.musica || STATE.evento.empate || (STATE.evento.presentacion==="villar"||STATE.evento.presentacion==="cerda");
   document.querySelectorAll("#scene video").forEach(v=>{
     if(takeover){ v.muted=true; try{v.pause();}catch(_){} }
-    else if(videoEscena){ v.muted=false; try{ if(v.paused) v.play().catch(()=>{}); }catch(_){} }
+    else if(videoEscena){ v.muted = (e==="contexto"); try{ if(v.paused) v.play().catch(()=>{}); }catch(_){} }
   });
 }
 
