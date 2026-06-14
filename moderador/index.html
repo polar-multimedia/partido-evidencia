@@ -298,16 +298,10 @@ function render(){
   if(ATRAS[EV.estado]){ add("↩️ Atrás (undo)", atras, "ghost mini"); }
 
   sep();
-  // 2) Selección / presentación del ponente (solo en lobby)
-  if(EV.estado==="lobby"){
-    if(!EV.ponente){
-      add("👤 Elegir ponente: Dra. Villar", ()=>db.ref("evento/ponente").set("villar"), "ghost");
-      add("👤 Elegir ponente: Dr. Cerda", ()=>db.ref("evento/ponente").set("cerda"), "ghost");
-    } else {
-      const nom = EV.ponente==="villar" ? "Dra. Villar" : "Dr. Cerda";
-      add(EV.presentacion ? "⏹️ Detener presentación" : ("🎤 Reproducir presentación · "+nom),
-          lanzarPresentacion, "ghost mini");
-    }
+  // 2) Selección del ponente (solo en lobby). La presentación se reproduce con "Iniciar".
+  if(EV.estado==="lobby" && !EV.ponente){
+    add("👤 Elegir ponente: Dra. Villar", ()=>db.ref("evento/ponente").set("villar"), "ghost");
+    add("👤 Elegir ponente: Dr. Cerda", ()=>db.ref("evento/ponente").set("cerda"), "ghost");
   }
   // 3) Lanzadores secundarios (siempre disponibles, en chico)
   add(EV.mostrar_qr?"🙈 Ocultar QR":"📲 Mostrar QR de acceso",
