@@ -313,7 +313,13 @@ function renderPresenta(){
 function renderEmpate(){
   const o = document.getElementById("empate");
   if(STATE.evento.empate){
-    if(o.dataset.on!=="1"){ o.dataset.on="1"; o.innerHTML=`<video src="../assets/empate.mp4" autoplay playsinline></video>`; }
+    if(o.dataset.on!=="1"){
+      o.dataset.on="1";
+      o.innerHTML=`<video src="../assets/empate.mp4" autoplay playsinline></video>`;
+      const vd=o.querySelector("video");
+      // Al terminar el video "Vamos a penales", continúa solo: revela "¡Vamos a penales!" (penintro)
+      vd.onended = ()=>{ if(STATE.evento.modo==="penales"){ db.ref("evento/empate").set(false); } };
+    }
     o.classList.add("show");
     const v=o.querySelector("video"); if(v&&v.paused) v.play().catch(()=>{});
   } else { o.classList.remove("show"); o.innerHTML=""; o.dataset.on=""; }

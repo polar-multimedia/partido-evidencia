@@ -369,7 +369,8 @@ function render(){
   ov(EV.mostrar_qr?"🙈 Ocultar QR":"📲 Mostrar QR de acceso", ()=>db.ref("evento/mostrar_qr").set(!EV.mostrar_qr));
   ov(EV.musica?"⏹️ Detener video musical":"🎵 Lanzar video musical", ()=>lanzarOverlay("musica"));
   ov(EV.loop_full?"⏹️ Detener loop":"🎬 Lanzar loop (sin sonido)", ()=>lanzarOverlay("loop_full"));
-  ov(EV.empate?"⏹️ Detener 'Vamos a penales'":"🥅 Vamos a penales (video)", ()=>lanzarOverlay("empate"));
+  // Disparador de emergencia: lanza TODA la fase de penales (video → penintro → penales). Oculto si ya estás en penales.
+  if(!enPenales()) ov("🥅 Vamos a penales (ir ahora)", ()=>{ if(confirm("¿Forzar empate e ir a penales ahora? Termina anticipadamente las preguntas.")) irAPenales(); }, "danger");
   a.appendChild(det);
 
   function navSlides(field, n){   // ◀ Anterior / x/N / Siguiente ▶ — dentro del dock, bajo el principal
