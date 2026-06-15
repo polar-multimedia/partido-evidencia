@@ -28,9 +28,12 @@
   .watch{text-align:center;color:var(--muted);margin:auto 0}
   .watch .em{font-size:64px}
   #mtimer{font-size:64px;text-align:center}
-  .react{display:flex;gap:12px;justify-content:center;margin-top:10px}
-  .react button{font-size:30px;background:var(--panel);border:1px solid var(--line);border-radius:14px;
-    width:64px;height:64px;cursor:pointer}
+  .reacth{text-align:center;color:#cdd8e4;font-size:14px;font-weight:700;margin:16px 0 6px}
+  .react{display:flex;gap:12px;justify-content:center;margin-top:4px}
+  .react button{background:var(--panel);border:1px solid var(--line);border-radius:16px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 14px;min-width:86px}
+  .react .re{font-size:30px;line-height:1}
+  .react .rl{font-size:12px;font-weight:800;color:#cdd8e4}
   .result-big{font-size:40px;text-align:center;font-weight:900}
   .learn li{margin-bottom:14px}
   .learn .ok{color:var(--green);font-weight:800}
@@ -279,10 +282,11 @@ function renderResultado(){
   const corrLbl = correctSet(c).length>1 ? "Respuestas correctas" : "Respuesta correcta";
   let html = `<div class="result-big" style="color:${acerto?'var(--green)':'var(--red)'}">${acerto?'✓ ¡Acertaste!':(sinResp?'⏱ Sin respuesta':'✗ Fallaste')}</div>
     <p class="muted" style="text-align:center;margin:4px 0">${corrLbl}: <b style="color:var(--green)">${correctasTexto(c)}</b></p>
+    <div class="reacth">👇 Toca para enviar un ánimo a la pantalla del salón</div>
     <div class="react">
-      <button onclick="reaccion('👏')">👏</button>
-      <button onclick="reaccion('⚽')">⚽</button>
-      <button onclick="reaccion('🔥')">🔥</button></div>`;
+      <button onclick="reaccion('👏')"><span class="re">👏</span><span class="rl">Aplausos</span></button>
+      <button onclick="reaccion('⚽')"><span class="re">⚽</span><span class="rl">¡Gol!</span></button>
+      <button onclick="reaccion('🔥')"><span class="re">🔥</span><span class="rl">¡Fuego!</span></button></div>`;
   if(!acerto){
     html += `<button class="btn ghost wide" style="margin-top:14px" id="varbtn" onclick="pedirVar()">🤚 No estoy de acuerdo · Pedir VAR</button>`;
   }
