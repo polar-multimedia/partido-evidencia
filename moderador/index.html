@@ -176,7 +176,7 @@ function siguiente(){ // tras el VAR de cada pregunta
     return;
   }
   if(ultimaPreg()){ irAPenales(); return; }                 // tras P8 -> penales
-  if(finCaso1()){ setEstado("transicion",{trans:"final1T"}); return; }  // tras P4 -> medio tiempo
+  if(finCaso1()){ setEstado("transicion",{trans:"inicio2T"}); return; }  // tras P4 -> medio tiempo (final-primer-tiempo DESACTIVADO; va directo a inicio-segundo-tiempo. Para reactivar: trans:"final1T")
   setEstado("cortinilla",{ caso_actual:(EV.caso_actual||1)+1 });        // siguiente pregunta del mismo caso
 }
 
@@ -363,7 +363,7 @@ function render(){
       break;
     case "var":
       if(ultimaPreg()) addP("🥅 Ir a penales →", siguiente);
-      else if(finCaso1()) addP("⏸️ Final primer tiempo →", siguiente, "go");
+      else if(finCaso1()) addP("▶️ Inicio segundo tiempo →", siguiente, "go");
       else addP("Mostrar cortinilla pregunta "+((EV.caso_actual||1)+1)+" →", siguiente, "go");
       break;
     case "transicion":
