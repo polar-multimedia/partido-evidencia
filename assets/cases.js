@@ -76,7 +76,7 @@ const CASOS = [
     },
     correcta:["B","C"],
     mensaje_clave:"En zonas con alta resistencia a claritromicina, prefiere esquemas sin claritromicina (cuádruple con bismuto o dual a altas dosis) con tegoprazán.",
-    var_media:[ {type:"img",src:"VAR-pregunta3.png"} ],
+    var_media:[ {type:"img",src:"VAR-pregunta3A.png"}, {type:"img",src:"VAR-pregunta3b.png"}, {type:"img",src:"VAR-pregunta3c.png"}, {type:"img",src:"VAR-pregunta3d.png"}, {type:"img",src:"VAR-pregunta3e.png"} ],
     fuentes:[ "J.M. Remes-Troche et al. V consenso mexicano sobre el diagnóstico y tratamiento de la infección por Helicobacter pylori. Rev Gastroenterol Méx. 2026;91:89-114." ],
     validado:true
   },
@@ -116,7 +116,7 @@ const CASOS = [
       D:"Realizan Panendoscopia"
     },
     correcta:"C", mensaje_clave:"",
-    var_media:["A","B","C"].map(L=>({type:"img",src:"VAR-pregunta6"+L+".png"})), fuentes:[], validado:true },
+    var_media:["A","B","C","D","E"].map(L=>({type:"img",src:"VAR-pregunta6"+L+".png"})), fuentes:[], validado:true },
   { id:7, caso_clinico:2, cortinilla:"cortinilla7.mp4",
     pregunta:"¿Según Lyon 2.0, se confirma ERGE?",
     opciones:{
@@ -126,7 +126,7 @@ const CASOS = [
       D:"No porque no tiene BARRETT"
     },
     correcta:"C", mensaje_clave:"",
-    var_media:["A","B","C","D"].map(L=>({type:"img",src:"VAR-pregunta7"+L+".png"})), fuentes:[], validado:true },
+    var_media:"ABCDEFGHIJKLMNOP".split("").map(L=>({type:"img",src:"VAR-pregunta7"+L+".png"})), fuentes:[], validado:true },
   { id:8, caso_clinico:2, cortinilla:"cortinilla8.mp4",
     pregunta:"¿Ahora qué le hacemos?",
     opciones:{
@@ -136,7 +136,7 @@ const CASOS = [
       D:"Le hacen pH-impedancia sin IBP"
     },
     correcta:"A", mensaje_clave:"",
-    var_media:"ABCDEFGHIJKLMNOPQRSTUVWXY".split("").map(L=>({type:"img",src:"VAR-pregunta8"+L+".png"})), fuentes:[], validado:true }
+    var_media:["A","B","C"].map(L=>({type:"img",src:"VAR-pregunta8"+L+".png"})), fuentes:[], validado:true }
 ];
 
 /* ===== PENALES: 5 preguntas fijas (no modificar el texto) ===== */
