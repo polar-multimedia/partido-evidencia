@@ -136,7 +136,27 @@ const CASOS = [
       D:"Le hacen pH-impedancia sin IBP"
     },
     correcta:"A", mensaje_clave:"",
-    var_media:["A","B","C"].map(L=>({type:"img",src:"VAR-pregunta8"+L+".png"})), fuentes:[], validado:true }
+    var_media:["A","B","C"].map(L=>({type:"img",src:"VAR-pregunta8"+L+".png"})), fuentes:[], validado:true },
+  { id:9, caso_clinico:2, cortinilla:"cortinilla9.mp4",
+    pregunta:"Respecto al tegoprazán todo es cierto, EXCEPTO:",
+    opciones:{
+      A:"Su efecto no se modifica por la ingesta de alimentos",
+      B:"Tienen efecto sostenido por 24 hs con excelente control nocturno",
+      C:"Tiene evidencia en ERGE erosivo, ERNE, úlcera gástrica y erradicación de H pylori",
+      D:"Le toma 3-5 días alcanzar el efecto completo"
+    },
+    correcta:"D", mensaje_clave:"",
+    var_media:[ {type:"img",src:"VAR-pregunta9.png"} ], fuentes:[], validado:true },
+  { id:10, caso_clinico:2, cortinilla:"cortinilla10.mp4",
+    pregunta:"Respecto al tegoprazán todo es cierto, EXCEPTO:",
+    opciones:{
+      A:"No afecta el vaciamiento gástrico",
+      B:"La elevación de gastrina es menor que con IBPs e incluso con vonoprazán",
+      C:"No hay diferencia en EA graves vs placebo",
+      D:"Todo es correcto"
+    },
+    correcta:"D", mensaje_clave:"",
+    var_media:["A","B"].map(L=>({type:"img",src:"VAR-pregunta10"+L+".png"})), fuentes:[], validado:true }
 ];
 
 /* ===== PENALES: 5 preguntas fijas (no modificar el texto) ===== */
