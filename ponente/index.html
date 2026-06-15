@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Ponente · El Partido de la Evidencia</title>
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+  html{background:#0a0e15}
+  body{background:transparent}
+  #bgloop{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;opacity:.20}
+  #bgveil{position:fixed;inset:0;z-index:-1;background:
+    radial-gradient(130% 80% at 0% 0%, rgba(25,195,214,.18), transparent 46%),
+    radial-gradient(130% 80% at 100% 100%, rgba(255,140,90,.16), transparent 46%),
+    linear-gradient(rgba(8,11,17,.82),rgba(8,11,17,.93))}
+  #app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;
+    padding:18px;gap:16px;justify-content:center}
+  .hdr{display:flex;align-items:center;justify-content:space-between}
+  .hdr .brand{font-size:15px;font-weight:800}
+  .card{background:rgba(20,28,42,.82);border:1px solid rgba(255,255,255,.07);border-radius:20px;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  .info{padding:22px;text-align:center}
+  .info .lbl{text-transform:uppercase;letter-spacing:.10em;font-size:13px;color:var(--muted);font-weight:800}
+  .info .big{font-size:30px;font-weight:900;margin-top:8px;line-height:1.15}
+  .pos{font-size:60px;font-weight:900;font-variant-numeric:tabular-nums;text-align:center;margin:6px 0}
+  .pos small{font-size:24px;color:var(--muted);font-weight:800}
+  .navrow{display:flex;gap:14px}
+  .navrow .btn{flex:1;font-size:24px;font-weight:900;padding:34px 14px;border-radius:22px;cursor:pointer;
+    border:none;-webkit-tap-highlight-color:transparent;transition:transform .08s ease}
+  .navrow .btn:active{transform:scale(.96)}
+  .btn.prev{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);color:#fff}
+  .btn.next{background:linear-gradient(135deg,#ffc163,#ff7e5f);color:#241405;box-shadow:0 12px 32px rgba(255,126,95,.42)}
+  .wait{padding:40px 22px;text-align:center;color:var(--muted)}
+  .wait .em{font-size:56px}
+  .wait .t{font-size:20px;font-weight:800;color:#cdd8e4;margin-top:10px}
+  .wait .s{font-size:14px;margin-top:6px}
+  #conn{font-size:12px}
+  #cfgnote{text-align:center;color:var(--muted);font-size:11px;margin-top:6px}
+</style>
+</head><body>
+<video id="bgloop" src="../assets/loop.mp4" autoplay loop muted playsinline></video>
+<div id="bgveil"></div>
+<div id="app">
+  <div class="hdr">
+    <div class="brand">🎤 Ponente <span class="kc">· Partido de la Evidencia</span></div>
+    <span class="tag" id="conn">···</span>
+  </div>
+  <div id="view"></div>
+  <div id="cfgnote"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="../assets/firebase.js"></script>
+<script src="../assets/common.js"></script>
+<script src="../assets/cases.js"></script>
+<script>
+const view = document.getElementById("view");
+let EV = { estado:"lobby", caso_actual:1 }, ready=false;
+
+function enPenales(){ return EV.modo==="penales"; }
+function casoMod(){ return CASOS.find(x=>x.id===(EV.caso_actual||1)) || CASOS[0]; }
+function casoClinico(){ return casoMod().caso_clinico || 1; }
+function preg(){ return enPenales() ? (PENALES[(EV.penal||1)-1]) : casoMod(); }
+
+/* Devuelve el carrusel activo según el estado, o null si no hay nada que avanzar */
+function carruselActivo(){
+  if(EV.estado==="contexto" || EV.mostrar_contexto){
+    const media = CONTEXTO_CASO[casoClinico()] || [];
+    return { field:"ctx_slide", n:media.length, cur:EV.ctx_slide||0,
+             lbl:"Contexto", sub:"Caso clínico "+casoClinico() };
+  }
+  if(EV.estado==="var"){
+    const vm = (preg().var_media)||[];
+    return { field:"var_slide", n:vm.length, cur:EV.var_slide||0,
+             lbl:"VAR de la evidencia", sub: enPenales()?("Penal "+(EV.penal||1)):("Pregunta "+(EV.caso_actual||1)) };
+  }
+  return null;
+}
+
+function setSlide(field, to, n){
+  if(ready) db.ref("evento/"+field).set(((to)%n+n)%n);
+  if(navigator.vibrate){ try{ navigator.vibrate(14); }catch(_){} }
+}
+
+function render(){
+  const c = carruselActivo();
+  if(!c || c.n<=0){
+    view.innerHTML = `<div class="card wait">
+      <div class="em">⏳</div>
+      <div class="t">Espera tu turno</div>
+      <div class="s">Cuando estés en <b>Contexto</b> o en el <b>VAR</b>, aquí aparecerán los botones para avanzar tus slides.</div>
+    </div>`;
+    return;
+  }
+  view.innerHTML = `
+    <div class="card info">
+      <div class="lbl">${escapeHTML(c.lbl)}</div>
+      <div class="big">${escapeHTML(c.sub)}</div>
+      <div class="pos">${c.cur+1}<small> / ${c.n}</small></div>
+    </div>
+    <div class="navrow">
+      <button class="btn prev" id="prevb">◀ Anterior</button>
+      <button class="btn next" id="nextb">Siguiente ▶</button>
+    </div>`;
+  document.getElementById("prevb").onclick = ()=>setSlide(c.field, c.cur-1, c.n);
+  document.getElementById("nextb").onclick = ()=>setSlide(c.field, c.cur+1, c.n);
+}
+
+fbOnReady(()=>{
+  ready=true;
+  document.getElementById("conn").textContent="🟢 en línea";
+  document.getElementById("cfgnote").textContent="";
+  db.ref("evento").on("value", s=>{ EV = s.val()||{estado:"lobby",caso_actual:1}; render(); });
+});
+render();
+</script>
+</body></html>

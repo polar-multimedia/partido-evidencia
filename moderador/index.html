@@ -110,6 +110,7 @@
       <div class="custom">otro: <input id="dur" type="number" min="5" max="120" value="15"> seg</div>
     </div>
     <div class="actions" style="margin-top:12px">
+      <button class="btn ghost mini" onclick="exportarCSV()">📋 Exportar participantes (CSV)</button>
       <button class="btn ghost mini" onclick="exportar()">⬇️ Exportar analítica (JSON)</button>
       <button class="btn ghost mini" onclick="if(confirm('¿Retroceder un paso para corregir el estado?'))atras()">↩️ Atrás (corregir estado)</button>
       <button class="btn ghost mini danger" onclick="reiniciar()">🗑️ Reiniciar evento</button>
@@ -262,6 +263,41 @@ function reiniciar(){
   db.ref().update({ evento:{estado:"lobby",caso_actual:1}, respuestas:null, scored:null,
     equipos:{rapido:{puntaje:0,racha:0},control:{puntaje:0,racha:0}}, var_solicitudes:null,
     jugadores:null, reacciones:null });
+}
+
+/* Export CSV nominal: una fila por participante con su respuesta en cada pregunta + aciertos y puntos */
+function exportarCSV(){
+  Promise.all([db.ref("respuestas").once("value"), db.ref("jugadores").once("value")])
+  .then(([rs,js])=>{
+    const resp = rs.val()||{}, jug = js.val()||{};
+    // claves de preguntas: 1..N (casos) y P1..P5 (penales)
+    const qKeys = CASOS.map(c=>String(c.id)).concat(PENALES.map(p=>"P"+p.n));
+    const correctaDe = key => {
+      if(String(key).startsWith("P")){ const p=PENALES[parseInt(key.slice(1))-1]; return p?p.correcta:""; }
+      const c=CASOS.find(x=>String(x.id)===String(key)); return c?correctasTexto(c):"";
+    };
+    const esc = s => '"'+String(s==null?"":s).replace(/"/g,'""')+'"';
+    const headerQ = CASOS.map(c=>"Caso"+c.caso_clinico+"-P"+c.id).concat(PENALES.map(p=>"Penal"+p.n));
+    const head = ["Nombre","Equipo"].concat(headerQ).concat(["Aciertos","Puntos totales"]);
+    const filaCorrecta = ["RESPUESTA CORRECTA",""].concat(qKeys.map(correctaDe)).concat(["",""]);
+    const rows = [head, filaCorrecta];
+    Object.entries(jug).forEach(([uid,j])=>{
+      let aciertos=0, puntos=0;
+      const cells = qKeys.map(k=>{
+        const r = (resp[k]||{})[uid];
+        if(!r) return "";
+        if(r.correcta) aciertos++;
+        puntos += (r.puntos||0);
+        return r.opcion + (r.correcta?" ✓":" ✗");
+      });
+      const eqNom = j.equipo==="rapido" ? "Inicio Rápido" : (j.equipo==="control" ? "Control Sostenido" : (j.equipo||""));
+      rows.push([j.nombre||"", eqNom].concat(cells).concat([aciertos, puntos]));
+    });
+    const csv = "﻿" + rows.map(r=>r.map(esc).join(",")).join("\r\n");
+    const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+    a.download="participantes-partido-evidencia.csv"; a.click();
+  });
 }
 
 function exportar(){
