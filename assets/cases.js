@@ -139,7 +139,7 @@ const CASOS = [
     correcta:["A","C"], mensaje_clave:"",
     var_media:["A","B","C"].map(L=>({type:"img",src:"VAR-pregunta8"+L+".png"})), fuentes:[], validado:true },
   { id:9, caso_clinico:2, cortinilla:"cortinilla9.mp4",
-    pregunta:"Respecto al tegoprazán todo es cierto, EXCEPTO:",
+    pregunta:"Respecto al tegoprazán, ¿Qué argumento es falso?",
     opciones:{
       A:"Su efecto no se modifica por la ingesta de alimentos",
       B:"Tienen efecto sostenido por 24 hs con excelente control nocturno",
@@ -149,7 +149,7 @@ const CASOS = [
     correcta:"D", mensaje_clave:"",
     var_media:[ {type:"img",src:"VAR-pregunta9.png"} ], fuentes:[], validado:true },
   { id:10, caso_clinico:2, cortinilla:"cortinilla10.mp4",
-    pregunta:"Respecto al tegoprazán todo es cierto, EXCEPTO:",
+    pregunta:"Respecto al tegoprazán ¿qué argumento es cierto?",
     opciones:{
       A:"No afecta el vaciamiento gástrico",
       B:"La elevación de gastrina es menor que con IBPs e incluso con vonoprazán",
