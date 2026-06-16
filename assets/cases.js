@@ -173,3 +173,35 @@ const PENALES = [
   { n:5, pregunta:"¿Cuál de las siguientes afirmaciones es correcta respecto al tratamiento de la esofagitis erosiva grave (Los Ángeles C/D)?",
     opciones:{ A:"Los inhibidores de la bomba de protones siempre se administran una vez al día durante 4 semanas.", B:"En casos graves puede requerirse tratamiento con IBP dos veces al día durante 8 semanas para optimizar la cicatrización.", C:"Tegoprazan debe administrarse obligatoriamente dos veces al día durante 12 semanas." }, correcta:"B" }
 ];
+
+/* ===== EDICIÓN POR PONENTE =====
+   Cada ponente puede presentar un subconjunto de slides (los demás equipos/preguntas no cambian).
+   - Dr. Cerda: set completo (no aparece aquí → usa CONTEXTO_CASO y var_media por defecto).
+   - Dra. Villar: versión recortada que solicitó (quita slides de contexto Caso 2 y de los VAR P5, P7, P8). */
+const PONENTE_SLIDES = {
+  villar: {
+    contexto: {
+      2: ["caso2A.png","caso2B.mp4","caso2C.mp4","caso2D.png","caso2F.png","caso2G.png"]  // quita 2E y 2H
+    },
+    var: {
+      5: ["VAR-pregunta5B.png","VAR-pregunta5C.png"],                                       // quita 5A
+      7: ["VAR-pregunta7B.png","VAR-pregunta7C.png","VAR-pregunta7D.png","VAR-pregunta7E.png",
+          "VAR-pregunta7H.png","VAR-pregunta7I.png","VAR-pregunta7J.png","VAR-pregunta7K.png",
+          "VAR-pregunta7L.png","VAR-pregunta7M.png","VAR-pregunta7O.png","VAR-pregunta7P.png"], // quita 7A,7F,7G,7N
+      8: ["VAR-pregunta8A.png"]                                                              // quita 8B,8C
+    }
+  }
+};
+/* Devuelve el carrusel de contexto efectivo para el ponente activo */
+function contextoPonente(caso, ponente){
+  const ov = (PONENTE_SLIDES[ponente] || {}).contexto;
+  if(ov && ov[caso]) return ov[caso].map(src => ({ type: /\.mp4$/i.test(src) ? "video" : "img", src }));
+  return CONTEXTO_CASO[caso] || [];
+}
+/* Devuelve los slides de VAR efectivos para el ponente activo */
+function varMediaPonente(q, ponente){
+  if(!q) return [];
+  const ov = (PONENTE_SLIDES[ponente] || {}).var;
+  if(ov && ov[q.id]) return ov[q.id].map(src => ({ type:"img", src }));
+  return q.var_media || [];
+}

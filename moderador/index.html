@@ -126,7 +126,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="../assets/firebase.js"></script>
 <script src="../assets/common.js"></script>
-<script src="../assets/cases.js?v=17"></script>
+<script src="../assets/cases.js?v=18"></script>
 <script>
 const ST_NOMBRE = {lobby:"Lobby / Registro",cortinilla:"Cortinilla",pregunta:"Pregunta (sin opciones)",
   opciones:"Opciones (lee el ponente)",responder:"Respondiendo ⏱",bloqueo:"Bloqueo",
@@ -375,8 +375,8 @@ function render(){
     case "despedida":  addP("🔄 Nuevo partido (reiniciar)", reiniciar, "danger"); break;
   }
   // Carrusel (◀ anterior / siguiente ▶) JUSTO debajo del botón principal, dentro del dock
-  if(EV.estado==="contexto" || EV.mostrar_contexto){ const n=(CONTEXTO_CASO[casoClinico()]||[]).length; if(n>1) navSlides("ctx_slide", n); }
-  if(EV.estado==="var"){ const vm=(preg().var_media)||[]; if(vm.length>1) navSlides("var_slide", vm.length); }
+  if(EV.estado==="contexto" || EV.mostrar_contexto){ const n=contextoPonente(casoClinico(), EV.ponente).length; if(n>1) navSlides("ctx_slide", n); }
+  if(EV.estado==="var"){ const vm=varMediaPonente(preg(), EV.ponente); if(vm.length>1) navSlides("var_slide", vm.length); }
 
   // ===== CONTROLES SECUNDARIOS (cuerpo, con scroll) =====
   // Selección de árbitro (solo en lobby sin árbitro)
@@ -385,7 +385,7 @@ function render(){
     add("👤 Elegir árbitro: Dr. Cerda", ()=>db.ref("evento/ponente").set("cerda"), "ghost");
   }
   // Ver contexto a demanda durante las preguntas
-  const ncx = (CONTEXTO_CASO[casoClinico()]||[]).length;
+  const ncx = contextoPonente(casoClinico(), EV.ponente).length;
   if(!enPenales() && ncx && ["cortinilla","pregunta","opciones","responder","bloqueo","resultado","var"].includes(EV.estado)){
     add(EV.mostrar_contexto?"🙈 Ocultar contexto":"👁 Ver contexto", toggleContexto, "ghost mini");
   }

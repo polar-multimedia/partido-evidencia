@@ -176,7 +176,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="../assets/firebase.js"></script>
 <script src="../assets/common.js"></script>
-<script src="../assets/cases.js?v=17"></script>
+<script src="../assets/cases.js?v=18"></script>
 <script>
 const scene = document.getElementById("scene");
 const casoLbl = document.getElementById("casoLbl");
@@ -290,7 +290,7 @@ function paintCtxSlideIdx(media, idx){
 }
 function renderCtxOverlay(){
   const o = document.getElementById("ctxoverlay");
-  const media = CONTEXTO_CASO[casoClinicoP()] || [];
+  const media = contextoPonente(casoClinicoP(), STATE.evento.ponente);
   const has = STATE.evento.mostrar_contexto && media.length;
   if(!has){ o.classList.remove("show"); o.innerHTML=""; o.dataset.on=""; o.dataset.idx=""; return; }
   const idx = Math.min(STATE.evento.ctx_slide||0, media.length-1);
@@ -443,7 +443,7 @@ function render(){
     scene.innerHTML = `<video class="varfull" src="../assets/${file}" autoplay playsinline></video>`;
   }
   else if(e==="contexto"){
-    const media = CONTEXTO_CASO[casoClinicoP()] || [];
+    const media = contextoPonente(casoClinicoP(), STATE.evento.ponente);
     const idx = Math.min(STATE.evento.ctx_slide||0, media.length-1);
     const m = media[idx];
     scene.innerHTML = m
@@ -512,7 +512,7 @@ function render(){
     }
   }
   else if(e==="var"){
-    const vm = c.var_media;
+    const vm = varMediaPonente(c, STATE.evento.ponente);
     if(vm && vm.length){
       const idx = Math.min(STATE.evento.var_slide||0, vm.length-1);
       const m = vm[idx] || vm[0];
