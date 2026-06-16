@@ -72,9 +72,10 @@ const CASOS = [
     opciones:{
       A:"Terapia triple con claritromicina: tegoprazán 50 mg c/12 h + claritromicina 500 mg c/12 h + amoxicilina 1 g c/12 h por 14 días.",
       B:"Terapia cuádruple con bismuto: tegoprazán 50 mg c/12 h + doxiciclina 100 mg c/12 h + subsalicilato de bismuto 300 mg c/6 h + metronidazol 500 mg c/8 h por 14 días.",
-      C:"Terapia dual a altas dosis: tegoprazán 50 mg c/12 h + amoxicilina 1 g c/8 h por 14 días."
+      C:"Terapia dual a altas dosis: tegoprazán 50 mg c/12 h + amoxicilina 1 g c/8 h por 14 días.",
+      D:"Opción B y C son correctas"
     },
-    correcta:["B","C"],
+    correcta:"D",
     mensaje_clave:"En zonas con alta resistencia a claritromicina, prefiere esquemas sin claritromicina (cuádruple con bismuto o dual a altas dosis) con tegoprazán.",
     var_media:[ {type:"img",src:"VAR-pregunta3A.png"}, {type:"img",src:"VAR-pregunta3b.png"}, {type:"img",src:"VAR-pregunta3c.png"}, {type:"img",src:"VAR-pregunta3d.png"}, {type:"img",src:"VAR-pregunta3e.png"} ],
     fuentes:[ "J.M. Remes-Troche et al. V consenso mexicano sobre el diagnóstico y tratamiento de la infección por Helicobacter pylori. Rev Gastroenterol Méx. 2026;91:89-114." ],
