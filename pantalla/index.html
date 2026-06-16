@@ -22,6 +22,16 @@
   #qroverlay{position:fixed;inset:0;z-index:48;background:rgba(8,11,17,.96);display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center}
   #qroverlay.show{display:flex}
   #qrbig{background:#fff;padding:22px;border-radius:18px}
+  #equiposovl{position:fixed;inset:0;z-index:53;background:rgba(8,11,17,.96);display:none;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:40px}
+  #equiposovl.show{display:flex}
+  #equiposovl .eqtt{font-size:44px;font-weight:900}
+  #equiposovl .eqgrid{display:flex;gap:34px;width:100%;max-width:1500px;justify-content:center;align-items:flex-start}
+  #equiposovl .eqcol{flex:1;max-width:680px;background:rgba(20,28,42,.85);border:2px solid;border-radius:22px;padding:24px 28px}
+  #equiposovl .eqh{font-size:30px;font-weight:900;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+  #equiposovl .eqh .n{margin-left:auto;font-size:22px;opacity:.85}
+  #equiposovl ul{margin:0;padding:0;list-style:none;column-gap:30px;font-size:24px;line-height:1.5}
+  #equiposovl li{padding:2px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+  #equiposovl .vacio{color:var(--muted);font-size:22px}
   #musica{position:fixed;inset:0;z-index:52;background:#000;display:none}
   #musica.show{display:block}
   #musica iframe{width:100%;height:100%;border:0}
@@ -145,6 +155,7 @@
 <div id="loopfull"><video id="loopfullvid" src="../assets/loop.mp4" autoplay loop muted playsinline></video></div>
 <div id="presenta"></div>
 <div id="empate"></div>
+<div id="equiposovl"></div>
 <div id="golanim"></div>
 <div id="reactions"></div>
 <div id="cfgnote"></div>
@@ -300,6 +311,29 @@ function renderQrOverlay(){
   }
   o.classList.add("show");
 }
+function renderEquipos(){
+  const o = document.getElementById("equiposovl");
+  if(!STATE.evento.mostrar_equipos){ o.classList.remove("show"); o.innerHTML=""; return; }
+  const lista = eq => {
+    const arr = Object.values(STATE.jugadores||{}).filter(j=>j.equipo===eq)
+      .map(j=>escapeHTML(j.nombre||"—"));
+    if(!arr.length) return `<div class="vacio">Sin jugadores aún</div>`;
+    const cols = arr.length>10 ? 2 : 1;
+    return `<ul style="column-count:${cols}">${arr.map(n=>`<li>${n}</li>`).join("")}</ul>`;
+  };
+  o.innerHTML = `<div class="eqtt">Los equipos en la cancha</div>
+    <div class="eqgrid">
+      <div class="eqcol" style="border-color:var(--teal)">
+        <div class="eqh" style="color:var(--teal)">⚡ Inicio Rápido <span class="n">${jugadoresPorEquipo("rapido")}</span></div>
+        ${lista("rapido")}
+      </div>
+      <div class="eqcol" style="border-color:var(--green)">
+        <div class="eqh" style="color:var(--green)">🛡️ Control Sostenido <span class="n">${jugadoresPorEquipo("control")}</span></div>
+        ${lista("control")}
+      </div>
+    </div>`;
+  o.classList.add("show");
+}
 function renderMusica(){
   const o = document.getElementById("musica");
   if(STATE.evento.musica){
@@ -362,6 +396,7 @@ function render(){
   // (El VAR ya NO es automático: el operador lo abre manualmente desde el control.)
   renderCtxOverlay();
   renderQrOverlay();
+  renderEquipos();
   renderMusica();
   renderLoopFull();
   renderPresenta();
