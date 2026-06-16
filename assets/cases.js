@@ -130,12 +130,12 @@ const CASOS = [
   { id:8, caso_clinico:2, cortinilla:"cortinilla8.mp4",
     pregunta:"¿Ahora qué le hacemos?",
     opciones:{
-      A:"Le inician tegoprazán 50 mg cada 24 hs",
-      B:"Le inician tegoprazán 50 mg cada 12 hs",
-      C:"Le hacen pH-impedancia con IBP",
-      D:"Le hacen pH-impedancia sin IBP"
+      A:"Le reiniciamos tegoprazán 50 mg cada 24 hs por 4 a 8 semanas y luego 25 mg diarios",
+      B:"Ahora si tegoprazán 50 mg cada 12 hs",
+      C:"Lo mando a cirugía previa manometría esofágica",
+      D:"Lo mando a cirugía previa pH-metría con IBP porque es refractario"
     },
-    correcta:"A", mensaje_clave:"",
+    correcta:["A","C"], mensaje_clave:"",
     var_media:["A","B","C"].map(L=>({type:"img",src:"VAR-pregunta8"+L+".png"})), fuentes:[], validado:true },
   { id:9, caso_clinico:2, cortinilla:"cortinilla9.mp4",
     pregunta:"Respecto al tegoprazán todo es cierto, EXCEPTO:",
