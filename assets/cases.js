@@ -119,24 +119,24 @@ const CASOS = [
     correcta:"C", mensaje_clave:"",
     var_media:["A","B","C","D","E"].map(L=>({type:"img",src:"VAR-pregunta6"+L+".png"})), fuentes:[], validado:true },
   { id:7, caso_clinico:2, cortinilla:"cortinilla7.mp4",
-    pregunta:"¿Según Lyon 2.0, se confirma ERGE?",
+    pregunta:"¿Ahora qué le hacemos?",
     opciones:{
-      A:"Sí porque tiene hernia hiatal de 2-3 cm",
-      B:"Sí porque tiene esofagitis A",
-      C:"Sí porque tiene esofagitis C",
-      D:"No porque no tiene BARRETT"
+      A:"Le inician tegoprazán 50 mg cada 24 hs",
+      B:"Le inician tegoprazán 50 mg cada 12 hs",
+      C:"Le hacen pH impedancia con IBP",
+      D:"Le hacen pH impedancia sin IBP"
     },
-    correcta:"C", mensaje_clave:"",
+    correcta:"A", mensaje_clave:"",
     var_media:"ABCDEFGHIJKLMNOP".split("").map(L=>({type:"img",src:"VAR-pregunta7"+L+".png"})), fuentes:[], validado:true },
   { id:8, caso_clinico:2, cortinilla:"cortinilla8.mp4",
     pregunta:"¿Ahora qué le hacemos?",
     opciones:{
       A:"Le reiniciamos tegoprazán 50 mg cada 24 hs por 4 a 8 semanas y luego 25 mg diarios",
-      B:"Ahora si tegoprazán 50 mg cada 12 hs",
-      C:"Lo mando a cirugía previa manometría esofágica",
-      D:"Lo mando a cirugía previa pH-metría con IBP porque es refractario"
+      B:"Lo mando a cirugía previa manometría esofágica",
+      C:"Lo mando a cirugía previa pH-metría con IBP porque es refractario",
+      D:"A y C son correctas"
     },
-    correcta:["A","C"], mensaje_clave:"",
+    correcta:"D", mensaje_clave:"",
     var_media:["A","B","C"].map(L=>({type:"img",src:"VAR-pregunta8"+L+".png"})), fuentes:[], validado:true },
   { id:9, caso_clinico:2, cortinilla:"cortinilla9.mp4",
     pregunta:"Respecto al tegoprazán, ¿Qué argumento es falso?",
