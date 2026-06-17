@@ -211,7 +211,10 @@ function revelar(){
         eq[t].puntaje=(eq[t].puntaje||0)+add[t];
         eq[t].racha = correctos[t]>0 ? ((eq[t].racha||0)+1) : 0;
       });
-      const gol = add.rapido>add.control ? "rapido" : (add.control>add.rapido ? "control" : "empate");
+      // Gol por DESEMPEÑO (puntos por jugador), no por cantidad de integrantes -> equipos disparejos compiten parejo
+      const nR = Math.max(1, jugN("rapido")), nC = Math.max(1, jugN("control"));
+      const normR = add.rapido / nR, normC = add.control / nC;
+      const gol = normR>normC ? "rapido" : (normC>normR ? "control" : "empate");
       if(pen){
         if(gol==="rapido"||gol==="control"){ eq[gol].penales = (eq[gol].penales||0)+1; }
         const ps={};
