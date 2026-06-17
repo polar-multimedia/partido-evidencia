@@ -22,6 +22,15 @@
   #qroverlay{position:fixed;inset:0;z-index:48;background:rgba(8,11,17,.96);display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center}
   #qroverlay.show{display:flex}
   #qrbig{background:#fff;padding:22px;border-radius:18px}
+  .qrteams{display:flex;gap:60px;align-items:stretch;justify-content:center;flex-wrap:wrap}
+  .qrteam{display:flex;flex-direction:column;align-items:center;gap:16px;background:rgba(20,28,42,.85);
+    border:3px solid;border-radius:24px;padding:28px 34px}
+  .qrteam.qteal{border-color:var(--teal)} .qrteam.qgreen{border-color:var(--green)}
+  .qrteam .qresc{height:120px;width:auto;border-radius:12px;background:#000}
+  .qrteam .qrnom{font-size:32px;font-weight:900}
+  .qrteam.qteal .qrnom{color:var(--teal)} .qrteam.qgreen .qrnom{color:var(--green)}
+  .qrteam .qrbox{background:#fff;padding:18px;border-radius:16px}
+  .qrteam .qrhint{font-size:20px;font-weight:700;color:#dfe7ef}
   #equiposovl{position:fixed;inset:0;z-index:53;background:rgba(8,11,17,.96);display:none;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:40px}
   #equiposovl.show{display:flex}
   #equiposovl .eqtt{font-size:44px;font-weight:900}
@@ -300,14 +309,34 @@ function renderCtxOverlay(){
 }
 function renderQrOverlay(){
   const o = document.getElementById("qroverlay");
-  if(!STATE.evento.mostrar_qr){ o.classList.remove("show"); o.dataset.done=""; o.innerHTML=""; return; }
-  if(o.dataset.done!=="1"){
+  const ev = STATE.evento;
+  const showR = !!ev.qr_rapido, showC = !!ev.qr_control;
+  const showG = !!ev.mostrar_qr && !showR && !showC;
+  const key = (showR?"R":"")+(showC?"C":"")+(showG?"G":"");
+  if(!key){ o.classList.remove("show"); o.dataset.qr=""; o.innerHTML=""; return; }
+  if(o.dataset.qr!==key){
+    o.dataset.qr = key;
     const baseDir = location.pathname.replace(/pantalla\/?(index\.html)?$/i, "");
-    const mesaURL = location.origin + baseDir + "mesa/";
-    o.innerHTML = `<div class="tag">Escanea para unirte al partido</div><div id="qrbig"></div>
-      <div class="muted" style="font-size:16px;max-width:80vw;word-break:break-all">${escapeHTML(mesaURL)}</div>`;
-    if(typeof QRCode!=="undefined"){ new QRCode(document.getElementById("qrbig"), { text:mesaURL, width:340, height:340, colorDark:"#0a0e15", colorLight:"#ffffff" }); }
-    o.dataset.done = "1";
+    const mesa = (q)=> location.origin + baseDir + "mesa/" + (q?("?equipo="+q):"");
+    const mkQR = (el,url,dark)=>{ if(typeof QRCode!=="undefined" && el) new QRCode(el, { text:url, width:340, height:340, colorDark:dark||"#0a0e15", colorLight:"#ffffff" }); };
+    if(showR || showC){
+      const col = (key)=>{
+        const t = key==="rapido" ? {nom:"Inicio Rápido",em:"⚡",cls:"qteal",file:"escudo_inicio_rapido"} : {nom:"Control Sostenido",em:"🛡️",cls:"qgreen",file:"escudo_control_sostenido"};
+        return `<div class="qrteam ${t.cls}">
+            <video class="qresc" src="../assets/${t.file}.mp4" poster="../assets/${t.file}.png" autoplay loop muted playsinline></video>
+            <div class="qrnom">${t.em} ${t.nom}</div>
+            <div id="qr_${key}" class="qrbox"></div>
+            <div class="qrhint">Escanea para unirte a este equipo</div>
+          </div>`;
+      };
+      o.innerHTML = `<div class="qrteams">${showR?col("rapido"):""}${showC?col("control"):""}</div>`;
+      if(showR) mkQR(document.getElementById("qr_rapido"), mesa("rapido"));
+      if(showC) mkQR(document.getElementById("qr_control"), mesa("control"));
+    } else {
+      o.innerHTML = `<div class="tag">Escanea para unirte al partido</div><div id="qrbig"></div>
+        <div class="muted" style="font-size:16px;max-width:80vw;word-break:break-all">${escapeHTML(mesa(""))}</div>`;
+      mkQR(document.getElementById("qrbig"), mesa(""));
+    }
   }
   o.classList.add("show");
 }

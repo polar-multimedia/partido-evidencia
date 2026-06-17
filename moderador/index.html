@@ -143,7 +143,7 @@ function finCaso1(){ return (EV.caso_actual||1)===4; }   // última pregunta del
 function ultimaPreg(){ return (EV.caso_actual||1)>=CASOS.length; }  // última pregunta del caso 2
 function preg(){ return enPenales() ? (PENALES[(EV.penal||1)-1]) : casoMod(); }
 function qKey(){ return enPenales() ? ("P"+(EV.penal||1)) : (EV.caso_actual||1); }
-function setEstado(e, extra){ if(ready) db.ref("evento").update(Object.assign({estado:e, mostrar_contexto:false, mostrar_qr:false, mostrar_equipos:false, presentacion:null}, extra||{})); }
+function setEstado(e, extra){ if(ready) db.ref("evento").update(Object.assign({estado:e, mostrar_contexto:false, mostrar_qr:false, qr_rapido:false, qr_control:false, mostrar_equipos:false, presentacion:null}, extra||{})); }
 function toggleContexto(){ if(ready) db.ref("evento").update({ mostrar_contexto:!EV.mostrar_contexto, ctx_slide:0 }); }
 function lanzarOverlay(which){ // loop_full | musica | empate (mutuamente excluyentes)
   if(!ready) return;
@@ -406,7 +406,9 @@ function render(){
   const sum=document.createElement("summary"); sum.textContent="🎬 Overlays en pantalla"; det.appendChild(sum);
   const box=document.createElement("div"); box.className="actions"; box.style.marginTop="10px"; det.appendChild(box);
   const ov=(label,fn,cls)=>{ const b=document.createElement("button"); b.className="btn ghost mini"+(cls?" "+cls:""); b.textContent=label; b.onclick=fn; box.appendChild(b); };
-  ov(EV.mostrar_qr?"🙈 Ocultar QR":"📲 Mostrar QR de acceso", ()=>db.ref("evento/mostrar_qr").set(!EV.mostrar_qr));
+  ov(EV.mostrar_qr?"🙈 Ocultar QR general":"📲 QR de acceso (general)", ()=>db.ref("evento").update({mostrar_qr:!EV.mostrar_qr, qr_rapido:false, qr_control:false}));
+  ov(EV.qr_rapido?"🙈 Ocultar QR ⚡ Inicio Rápido":"⚡ Mostrar QR Inicio Rápido", ()=>db.ref("evento").update({qr_rapido:!EV.qr_rapido, mostrar_qr:false}));
+  ov(EV.qr_control?"🙈 Ocultar QR 🛡️ Control Sostenido":"🛡️ Mostrar QR Control Sostenido", ()=>db.ref("evento").update({qr_control:!EV.qr_control, mostrar_qr:false}));
   ov(EV.mostrar_equipos?"🙈 Ocultar integrantes en pantalla":"👥 Mostrar integrantes en pantalla", ()=>db.ref("evento/mostrar_equipos").set(!EV.mostrar_equipos));
   ov(EV.musica?"⏹️ Detener video musical":"🎵 Lanzar video musical", ()=>lanzarOverlay("musica"));
   ov(EV.loop_full?"⏹️ Detener loop":"🎬 Lanzar loop (sin sonido)", ()=>lanzarOverlay("loop_full"));
