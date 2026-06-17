@@ -128,6 +128,9 @@ const meChip = document.getElementById("meChip");
 let ME = { nombre:null, equipo:null, registrado:false };
 let EV = { estado:"lobby", caso_actual:1 };
 let miRespuesta = null, selTeam = null, timerInt=null, lastVibSec=null, ready=false;
+/* Equipo fijado por QR (un QR por equipo/lado del salón): ...?equipo=rapido | control */
+const EQUIPO_FIJO = (new URLSearchParams(location.search).get("equipo")||"").toLowerCase();
+const TEAM_FIJO_OK = EQUIPO_FIJO==="rapido" || EQUIPO_FIJO==="control";
 
 function casoActual(){ return CASOS.find(c=>c.id===(EV.caso_actual||1)) || CASOS[0]; }
 function enPenalesM(){ return EV.modo==="penales"; }
@@ -153,6 +156,32 @@ function salir(){
 
 /* ---------- Registro ---------- */
 function renderRegistro(){
+  // Si el QR ya trae el equipo (un QR por lado), entra directo a ese equipo
+  if(TEAM_FIJO_OK){
+    selTeam = EQUIPO_FIJO;
+    const t = TEAMS[EQUIPO_FIJO];
+    const file = EQUIPO_FIJO==="rapido" ? "escudo_inicio_rapido" : "escudo_control_sostenido";
+    const col  = EQUIPO_FIJO==="rapido" ? "var(--teal)" : "var(--green)";
+    view.innerHTML = `
+      <div class="reg">
+        <div class="hero">
+          <img class="kclogo" src="../assets/logo-kicab-b.png" alt="Ki-CAB Tegoprazán">
+          <h1 class="rtitle">EL PARTIDO<br>DE LA EVIDENCIA</h1>
+        </div>
+        <div class="sech">Tu equipo</div>
+        <button class="tcard" data-sel="1" style="border-color:${col} !important" disabled>
+          <video class="tvid" src="../assets/${file}.mp4" poster="../assets/${file}.png" autoplay loop muted playsinline preload="auto"></video>
+          <div class="tcap"><div class="tnm" style="color:${col}">${t.emoji} ${t.nombre}</div><div class="tsub">Te sentaste de este lado</div></div>
+          <div class="tcheck">✓</div>
+        </button>
+        <div class="sech">Nombre completo</div>
+        <input id="nm" class="field" placeholder="Nombre completo" maxlength="40" autocomplete="name">
+        <button class="btn wide lg" id="entrar" disabled onclick="entrar()">Entrar al partido →</button>
+        <div class="muted2" style="text-align:center;margin-top:8px">¿Lado equivocado? Escanea el QR del otro equipo.</div>
+      </div>`;
+    document.getElementById("nm").addEventListener("input", refreshEntrar);
+    return;
+  }
   view.innerHTML = `
     <div class="reg">
       <div class="hero">
