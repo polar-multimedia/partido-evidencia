@@ -119,6 +119,9 @@
   .evidrow ul{flex:1;margin:0;padding-left:22px}
   .evidimg{flex:0 0 44%;max-width:44%;max-height:48vh;border-radius:12px;background:#fff}
   .varfull{max-width:100%;max-height:94vh;width:auto;display:block;border-radius:8px}
+  /* Modo slide (contexto / VAR / presentación / transición): a pantalla completa, sin margen negro por padding */
+  #main.slidemode .scene{padding:0}
+  #main.slidemode .varfull{width:100%;height:100%;max-width:none;max-height:none;object-fit:contain;border-radius:0;background:#000}
   .evid h3{font-size:30px;margin:0 0 14px}
   .evid li{font-size:21px;line-height:1.35;margin-bottom:9px}
   .caseimg{display:block;max-width:100%;max-height:40vh;border-radius:12px;margin:10px 0 16px}
@@ -414,6 +417,7 @@ function render(){
   pintarScore();
   const e = STATE.evento.estado || "lobby";
   document.body.classList.toggle("bgon", IDLE_STATES.includes(e));
+  document.getElementById("main").classList.toggle("slidemode", ["contexto","var","presentacion","transicion"].includes(e));
   if(e==="cortinilla") playVideo((casoActual()||{}).cortinilla);
   else if(e==="despedida") playVideo(DESPEDIDA);
   else stopCortinilla();
