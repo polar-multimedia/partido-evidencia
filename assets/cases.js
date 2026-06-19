@@ -134,7 +134,7 @@ const CASOS = [
       A:"Le reiniciamos tegoprazán 50 mg cada 24 hs por 4 a 8 semanas y luego 25 mg diarios",
       B:"Lo mando a cirugía previa manometría esofágica",
       C:"Lo mando a cirugía previa pH-metría con IBP porque es refractario",
-      D:"A y C son correctas"
+      D:"A y B son correctas"
     },
     correcta:"D", mensaje_clave:"",
     var_media:["A","B","C"].map(L=>({type:"img",src:"VAR-pregunta8"+L+".png"})), fuentes:[], validado:true },
