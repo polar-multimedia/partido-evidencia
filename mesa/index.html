@@ -121,7 +121,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="../assets/firebase.js"></script>
 <script src="../assets/common.js"></script>
-<script src="../assets/cases.js?v=21"></script>
+<script src="../assets/cases.js?v=22"></script>
 <script>
 const view = document.getElementById("view");
 const meChip = document.getElementById("meChip");
@@ -256,7 +256,7 @@ function renderContexto(){
 /* Lectura sincronizada: el médico lee la pregunta/opciones igual que en la pantalla */
 function renderLectura(showOpts){
   const c = pregEfectiva(preguntaActualM(), EV.ponente);
-  const lbl = enPenalesM() ? ("Penal "+(EV.penal||1)) : ("Pregunta · Caso "+EV.caso_actual);
+  const lbl = enPenalesM() ? ("Penal "+(EV.penal||1)) : ("Pregunta · Caso "+numPregunta(EV.caso_actual||1, EV.ponente));
   let html = `<div class="mcase"><div class="lbl">${lbl}</div>
       <div class="qq">${escapeHTML(c.pregunta)}</div></div>`;
   if(showOpts){
@@ -342,7 +342,7 @@ function render(){
     case "presentacion": watch("Presentación del ponente — mira la pantalla","🎤"); break;
     case "contexto":   watch("Contexto del caso — mira la pantalla","👀"); break;
     case "transicion": watch("Medio tiempo — mira la pantalla","⏸️"); break;
-    case "cortinilla": watch("Pregunta "+EV.caso_actual,"⚽"); break;
+    case "cortinilla": watch("Pregunta "+numPregunta(EV.caso_actual||1, EV.ponente),"⚽"); break;
     case "pregunta":   renderLectura(false); break;
     case "opciones":   renderLectura(true); break;
     case "responder":  renderResponder(); break;
