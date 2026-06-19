@@ -126,7 +126,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="../assets/firebase.js"></script>
 <script src="../assets/common.js"></script>
-<script src="../assets/cases.js?v=21"></script>
+<script src="../assets/cases.js?v=22"></script>
 <script>
 const ST_NOMBRE = {lobby:"Lobby / Registro",cortinilla:"Cortinilla",pregunta:"Pregunta (sin opciones)",
   opciones:"Opciones (lee el ponente)",responder:"Respondiendo ⏱",bloqueo:"Bloqueo",
@@ -140,7 +140,7 @@ function enPenales(){ return EV.modo==="penales"; }
 function casoMod(){ return CASOS.find(x=>x.id===(EV.caso_actual||1)) || CASOS[0]; }
 function casoClinico(){ return casoMod().caso_clinico || 1; }
 function finCaso1(){ return (EV.caso_actual||1)===4; }   // última pregunta del caso clínico 1
-function ultimaPreg(){ return (EV.caso_actual||1)>=CASOS.length; }  // última pregunta del caso 2
+function ultimaPreg(){ return esUltimaPregunta(EV.caso_actual||1, EV.ponente); }  // última pregunta de la secuencia del ponente
 function preg(){ return enPenales() ? (PENALES[(EV.penal||1)-1]) : casoMod(); }
 function qKey(){ return enPenales() ? ("P"+(EV.penal||1)) : (EV.caso_actual||1); }
 function setEstado(e, extra){ if(ready) db.ref("evento").update(Object.assign({estado:e, mostrar_contexto:false, mostrar_qr:false, qr_rapido:false, qr_control:false, mostrar_equipos:false, presentacion:null}, extra||{})); }
@@ -175,9 +175,10 @@ function siguiente(){ // tras el VAR de cada pregunta
     db.ref("evento").update({ estado:"pregunta", penal:(EV.penal||1)+1, empate:false, gol_ronda:null });
     return;
   }
-  if(ultimaPreg()){ irAPenales(); return; }                 // tras P8 -> penales
+  if(ultimaPreg()){ irAPenales(); return; }                 // tras la última pregunta -> penales
   if(finCaso1()){ setEstado("transicion",{trans:"inicio2T"}); return; }  // tras P4 -> medio tiempo (final-primer-tiempo DESACTIVADO; va directo a inicio-segundo-tiempo. Para reactivar: trans:"final1T")
-  setEstado("cortinilla",{ caso_actual:(EV.caso_actual||1)+1 });        // siguiente pregunta del mismo caso
+  const sig = siguientePreguntaId(EV.caso_actual||1, EV.ponente);        // siguiente pregunta de la secuencia (Villar salta la P7)
+  setEstado("cortinilla",{ caso_actual: sig!=null ? sig : (EV.caso_actual||1)+1 });
 }
 
 /* --- Cálculo de puntaje (idempotente). Casos y penales. --- */
@@ -334,7 +335,7 @@ function render(){
   document.getElementById("stCaso").textContent =
     (EV.estado==="lobby"||EV.estado==="final"||EV.estado==="presentacion") ? ""
     : enPenales() ? ("Penal "+(EV.penal||1)+" de "+PENALES.length)
-    : ("Caso clínico "+casoClinico()+" · Pregunta "+(EV.caso_actual||1)+" de "+CASOS.length);
+    : ("Caso clínico "+casoClinico()+" · Pregunta "+numPregunta(EV.caso_actual||1, EV.ponente)+" de "+totalPreguntas(EV.ponente));
   document.getElementById("nConn").textContent = Object.values(JUG).filter(j=>j.conectado!==false).length;
   document.getElementById("nRap").textContent = jugN("rapido");
   document.getElementById("nCon").textContent = jugN("control");
@@ -354,8 +355,8 @@ function render(){
   switch(EV.estado){
     case "lobby":      addP("▶️ Iniciar", ()=>{ if(!EV.ponente && !confirm("No has elegido árbitro. ¿Iniciar de todos modos?")) return; setEstado("presentacion",{caso_actual:1, modo:null, penal:null}); }, "go"); break;
     case "presentacion": addP("Contexto Caso 1 →", ()=>setEstado("contexto",{ctx_slide:0}), "go"); break;
-    case "contexto":   addP("Mostrar cortinilla pregunta "+(EV.caso_actual||1)+" →", ()=>setEstado("cortinilla"), "go"); break;
-    case "cortinilla": addP("Mostrar pregunta "+(EV.caso_actual||1)+" →", ()=>setEstado("pregunta"), "go"); break;
+    case "contexto":   addP("Mostrar cortinilla pregunta "+numPregunta(EV.caso_actual||1, EV.ponente)+" →", ()=>setEstado("cortinilla"), "go"); break;
+    case "cortinilla": addP("Mostrar pregunta "+numPregunta(EV.caso_actual||1, EV.ponente)+" →", ()=>setEstado("pregunta"), "go"); break;
     case "pregunta":   addP("Mostrar opciones →", ()=>setEstado("opciones"), "go"); break;
     case "opciones":   addP("⏱ Iniciar cronómetro", abrirRespuestas); break;
     case "responder":  addP("Cerrar tiempo (silbato)", cerrarTiempo); break;
@@ -367,7 +368,7 @@ function render(){
     case "var":
       if(ultimaPreg()) addP("🥅 Ir a penales →", siguiente);
       else if(finCaso1()) addP("▶️ Inicio segundo tiempo →", siguiente, "go");
-      else addP("Mostrar cortinilla pregunta "+((EV.caso_actual||1)+1)+" →", siguiente, "go");
+      else addP("Mostrar cortinilla pregunta "+numPregunta(siguientePreguntaId(EV.caso_actual||1, EV.ponente)||((EV.caso_actual||1)+1), EV.ponente)+" →", siguiente, "go");
       break;
     case "transicion":
       if(EV.trans==="final1T") addP("▶️ Inicio segundo tiempo →", ()=>setEstado("transicion",{trans:"inicio2T"}), "go");
