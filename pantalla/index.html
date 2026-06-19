@@ -188,7 +188,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="../assets/firebase.js"></script>
 <script src="../assets/common.js"></script>
-<script src="../assets/cases.js?v=21"></script>
+<script src="../assets/cases.js?v=22"></script>
 <script>
 const scene = document.getElementById("scene");
 const casoLbl = document.getElementById("casoLbl");
@@ -283,7 +283,7 @@ function pintarScore(){
   casoLbl.textContent = (e==="lobby") ? "Esperando jugadores"
     : (e==="final") ? "Marcador final"
     : enPenalesP() ? ("Penal " + (STATE.evento.penal||1) + (e==="penintro"?"":(" de "+PENALES.length)))
-    : ("Caso " + (STATE.evento.caso_actual||1));
+    : ("Caso " + numPregunta(STATE.evento.caso_actual||1, STATE.evento.ponente));
 }
 
 function nRespuestas(){
@@ -468,7 +468,7 @@ function render(){
   }
   else if(e==="cortinilla"){
     scene.innerHTML = `<div class="tag">La evidencia entra a la cancha</div>
-      <div class="big pop">PREGUNTA ${STATE.evento.caso_actual}</div>
+      <div class="big pop">PREGUNTA ${numPregunta(STATE.evento.caso_actual||1, STATE.evento.ponente)}</div>
       <div class="muted" style="font-size:26px;margin-top:14px">Prepárate…</div>`;
   }
   else if(e==="presentacion"){
@@ -489,7 +489,7 @@ function render(){
     scene.innerHTML = `<video class="varfull" src="../assets/${file}" autoplay playsinline></video>`;
   }
   else if(e==="pregunta"){
-    const lbl = enPenalesP() ? ("Penal "+(STATE.evento.penal||1)+" de "+PENALES.length) : ("Pregunta "+(STATE.evento.caso_actual||1)+" · Caso clínico "+casoClinicoP());
+    const lbl = enPenalesP() ? ("Penal "+(STATE.evento.penal||1)+" de "+PENALES.length) : ("Pregunta "+numPregunta(STATE.evento.caso_actual||1, STATE.evento.ponente)+" · Caso clínico "+casoClinicoP());
     scene.innerHTML = `<div class="casebox pop">
         <div class="lbl">${lbl}</div>
         <div class="q">${escapeHTML(c.pregunta)}</div></div>
