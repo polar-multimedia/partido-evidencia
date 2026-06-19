@@ -185,7 +185,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="../assets/firebase.js"></script>
 <script src="../assets/common.js"></script>
-<script src="../assets/cases.js?v=20"></script>
+<script src="../assets/cases.js?v=21"></script>
 <script>
 const scene = document.getElementById("scene");
 const casoLbl = document.getElementById("casoLbl");
@@ -430,7 +430,7 @@ function render(){
   renderLoopFull();
   renderPresenta();
   renderEmpate();
-  const c = preguntaActual();
+  const c = pregEfectiva(preguntaActual(), STATE.evento.ponente);
   if(timerInt){ clearInterval(timerInt); timerInt=null; }
 
   // La escena con video (presentación/contexto/transición) NO debe reconstruirse en cada
