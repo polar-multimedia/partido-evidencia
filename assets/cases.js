@@ -127,7 +127,7 @@ const CASOS = [
       D:"Le hacen pH impedancia sin IBP"
     },
     correcta:"A", mensaje_clave:"",
-    var_media:"ABCDEFGHIJKLMNOP".split("").map(L=>({type:"img",src:"VAR-pregunta7"+L+".png"})), fuentes:[], validado:true },
+    var_media:"ABCDEFGHIJLMNOP".split("").map(L=>({type:"img",src:"VAR-pregunta7"+L+".png"})), fuentes:[], validado:true },
   { id:8, caso_clinico:2, cortinilla:"cortinilla8.mp4",
     pregunta:"¿Ahora qué le hacemos?",
     opciones:{
@@ -186,8 +186,8 @@ const PONENTE_SLIDES = {
     var: {
       5: ["VAR-pregunta5B.png","VAR-pregunta5C.png"],                                       // quita 5A
       7: ["VAR-pregunta7B.png","VAR-pregunta7C.png","VAR-pregunta7D.png","VAR-pregunta7E.png",
-          "VAR-pregunta7H.png","VAR-pregunta7I.png","VAR-pregunta7J.png","VAR-pregunta7K.png",
-          "VAR-pregunta7L.png","VAR-pregunta7M.png","VAR-pregunta7O.png","VAR-pregunta7P.png"], // quita 7A,7F,7G,7N
+          "VAR-pregunta7H.png","VAR-pregunta7I.png","VAR-pregunta7J.png",
+          "VAR-pregunta7L.png","VAR-pregunta7M.png","VAR-pregunta7O.png","VAR-pregunta7P.png"], // quita 7A,7F,7G,7K,7N
       8: ["VAR-pregunta8A.png"]                                                              // quita 8B,8C
     }
   }
