@@ -121,7 +121,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="../assets/firebase.js"></script>
 <script src="../assets/common.js"></script>
-<script src="../assets/cases.js?v=20"></script>
+<script src="../assets/cases.js?v=21"></script>
 <script>
 const view = document.getElementById("view");
 const meChip = document.getElementById("meChip");
@@ -255,7 +255,7 @@ function renderContexto(){
 }
 /* Lectura sincronizada: el médico lee la pregunta/opciones igual que en la pantalla */
 function renderLectura(showOpts){
-  const c = preguntaActualM();
+  const c = pregEfectiva(preguntaActualM(), EV.ponente);
   const lbl = enPenalesM() ? ("Penal "+(EV.penal||1)) : ("Pregunta · Caso "+EV.caso_actual);
   let html = `<div class="mcase"><div class="lbl">${lbl}</div>
       <div class="qq">${escapeHTML(c.pregunta)}</div></div>`;
@@ -270,7 +270,7 @@ function renderLectura(showOpts){
   view.innerHTML = html;
 }
 function renderResponder(){
-  const c = preguntaActualM();
+  const c = pregEfectiva(preguntaActualM(), EV.ponente);
   view.innerHTML = `
     <div class="mcase"><div class="qq">${escapeHTML(c.pregunta)}</div></div>
     <div id="mtimer" class="timer">--</div>
@@ -305,7 +305,7 @@ function startTimer(){
   tick(); if(timerInt) clearInterval(timerInt); timerInt=setInterval(tick,250);
 }
 function renderResultado(){
-  const c = preguntaActualM();
+  const c = pregEfectiva(preguntaActualM(), EV.ponente);
   const acerto = esCorrecta(c, miRespuesta);
   const sinResp = !miRespuesta;
   const corrLbl = correctSet(c).length>1 ? "Respuestas correctas" : "Respuesta correcta";
