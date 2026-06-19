@@ -180,6 +180,18 @@ const PENALES = [
    - Dra. Villar: versión recortada que solicitó (quita slides de contexto Caso 2 y de los VAR P5, P7, P8). */
 const PONENTE_SLIDES = {
   villar: {
+    // Preguntas con texto/opciones distintos SOLO en la versión de esta ponente
+    preguntas: {
+      6: {
+        opciones: {
+          A:"Doblar dosis o cambiar IBP",
+          B:"Inician tegoprazan 50 mg al día",
+          C:"Realizan endoscopia",
+          D:"Realizan palendoscopia"
+        },
+        correcta:"C"
+      }
+    },
     contexto: {
       2: ["caso2A.png","caso2B.mp4","caso2C.mp4","caso2D.png","caso2F.png","caso2G.png"]  // quita 2E y 2H
     },
@@ -197,6 +209,13 @@ function contextoPonente(caso, ponente){
   const ov = (PONENTE_SLIDES[ponente] || {}).contexto;
   if(ov && ov[caso]) return ov[caso].map(src => ({ type: /\.mp4$/i.test(src) ? "video" : "img", src }));
   return CONTEXTO_CASO[caso] || [];
+}
+/* Devuelve la pregunta efectiva para el ponente activo (puede cambiar opciones/correcta) */
+function pregEfectiva(q, ponente){
+  if(!q) return q;
+  const ov = (PONENTE_SLIDES[ponente] || {}).preguntas;
+  if(ov && q.id != null && ov[q.id]) return Object.assign({}, q, ov[q.id]);
+  return q;
 }
 /* Devuelve los slides de VAR efectivos para el ponente activo */
 function varMediaPonente(q, ponente){
