@@ -180,6 +180,8 @@ const PENALES = [
    - Dra. Villar: versión recortada que solicitó (quita slides de contexto Caso 2 y de los VAR P5, P7, P8). */
 const PONENTE_SLIDES = {
   villar: {
+    // Esta ponente NO juega la P7: su secuencia es de 9 preguntas (se renumeran 1–9 en pantalla)
+    secuencia: [1,2,3,4,5,6,8,9,10],
     // Preguntas con texto/opciones distintos SOLO en la versión de esta ponente
     preguntas: {
       6: {
@@ -197,6 +199,7 @@ const PONENTE_SLIDES = {
     },
     var: {
       5: ["VAR-pregunta5B.png","VAR-pregunta5C.png"],                                       // quita 5A
+      6: ["VAR-pregunta6A.png","VAR-pregunta6C.png","VAR-pregunta6D.png","VAR-pregunta6E.png"], // quita 6B
       7: ["VAR-pregunta7B.png","VAR-pregunta7C.png","VAR-pregunta7D.png","VAR-pregunta7E.png",
           "VAR-pregunta7H.png","VAR-pregunta7I.png","VAR-pregunta7J.png",
           "VAR-pregunta7L.png","VAR-pregunta7M.png","VAR-pregunta7O.png","VAR-pregunta7P.png"], // quita 7A,7F,7G,7K,7N
@@ -210,6 +213,24 @@ function contextoPonente(caso, ponente){
   if(ov && ov[caso]) return ov[caso].map(src => ({ type: /\.mp4$/i.test(src) ? "video" : "img", src }));
   return CONTEXTO_CASO[caso] || [];
 }
+/* Secuencia de preguntas (ids) que juega el ponente. Por defecto, todas. */
+function secuenciaPonente(ponente){
+  const ov = (PONENTE_SLIDES[ponente] || {}).secuencia;
+  return (ov && ov.length) ? ov : CASOS.map(c => c.id);
+}
+/* Id de la pregunta siguiente en la secuencia (null si era la última). */
+function siguientePreguntaId(curId, ponente){
+  const seq = secuenciaPonente(ponente); const i = seq.indexOf(curId);
+  return (i >= 0 && i+1 < seq.length) ? seq[i+1] : null;
+}
+/* ¿Es la última pregunta de la secuencia del ponente? */
+function esUltimaPregunta(curId, ponente){
+  const seq = secuenciaPonente(ponente); return seq.indexOf(curId) === seq.length-1;
+}
+/* Número MOSTRADO de la pregunta (posición en la secuencia, 1-based) y total. */
+function numPregunta(curId, ponente){ const seq = secuenciaPonente(ponente); const i = seq.indexOf(curId); return i >= 0 ? i+1 : curId; }
+function totalPreguntas(ponente){ return secuenciaPonente(ponente).length; }
+
 /* Devuelve la pregunta efectiva para el ponente activo (puede cambiar opciones/correcta) */
 function pregEfectiva(q, ponente){
   if(!q) return q;
