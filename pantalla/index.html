@@ -372,7 +372,10 @@ function renderMusica(){
     if(o.dataset.on!=="1"){
       o.dataset.on="1";
       const src = CORT_URLS["musica.mp4"] || "../assets/musica.mp4";
-      o.innerHTML = `<video src="${src}" autoplay loop playsinline></video>`;
+      o.innerHTML = `<video src="${src}" autoplay playsinline></video>`;
+      const vd=o.querySelector("video");
+      // Pasa UNA sola vez: al terminar se cierra solo (y resetea el botón del control)
+      if(vd) vd.onended = ()=>{ db.ref("evento/musica").set(false); };
     }
     o.classList.add("show");
     const v=o.querySelector("video"); if(v&&v.paused) v.play().catch(()=>{});
