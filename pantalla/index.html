@@ -119,6 +119,23 @@
   .evidrow ul{flex:1;margin:0;padding-left:22px}
   .evidimg{flex:0 0 44%;max-width:44%;max-height:48vh;border-radius:12px;background:#fff}
   .varfull{max-width:100%;max-height:94vh;width:auto;display:block;border-radius:8px}
+  /* FIN DEL PARTIDO */
+  .finwrap{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .finwrap svg{width:170px;height:110px}
+  /* Pantalla final: ambos logos + marcador */
+  .finalboard{display:flex;align-items:center;justify-content:center;gap:50px;margin:14px 0}
+  .fbteam{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 26px;border-radius:24px;
+    border:3px solid transparent;transition:.2s}
+  .fbteam.win{border-color:#f2b53b;background:rgba(242,181,59,.10);box-shadow:0 0 40px rgba(242,181,59,.25)}
+  .fblogo{height:200px;width:auto;border-radius:16px;background:#000}
+  .fbname{font-size:26px;font-weight:900}
+  .fbnum{font-size:120px;font-weight:900;line-height:.9;font-variant-numeric:tabular-nums}
+  .fbvs{font-size:54px;opacity:.7}
+  /* Confeti */
+  #confeti{position:fixed;inset:0;z-index:58;pointer-events:none;overflow:hidden;display:none}
+  #confeti.show{display:block}
+  .conf{position:absolute;top:-20px;width:12px;height:18px;opacity:.95;animation:confcae linear forwards}
+  @keyframes confcae{to{transform:translateY(108vh) rotate(720deg);opacity:.9}}
   /* Modo slide (contexto / VAR / presentación / transición): a pantalla completa, sin margen negro por padding */
   #main.slidemode .scene{padding:0}
   #main.slidemode .varfull{width:100%;height:100%;max-width:none;max-height:none;object-fit:contain;border-radius:0;background:#000}
@@ -169,6 +186,7 @@
 <div id="empate"></div>
 <div id="equiposovl"></div>
 <div id="golanim"></div>
+<div id="confeti"></div>
 <div id="reactions"></div>
 <div id="cfgnote"></div>
 
@@ -257,6 +275,20 @@ async function preloadAll(){
   }
   msg.textContent = "Listo ✓";
 }
+let confetiTO = null;
+function lanzarConfeti(){
+  const o = document.getElementById("confeti"); if(!o) return;
+  const cols = ["#19c3d6","#8ce021","#f2b53b","#ff7e5f","#ffffff"];
+  let html = "";
+  for(let i=0;i<140;i++){
+    const x = Math.random()*100, d = 2.4+Math.random()*2.6, delay = Math.random()*2.2;
+    const c = cols[i%cols.length], w = 7+Math.random()*8;
+    html += `<div class="conf" style="left:${x}vw;background:${c};width:${w}px;height:${w*1.5}px;animation-duration:${d}s;animation-delay:${delay}s"></div>`;
+  }
+  o.innerHTML = html; o.classList.add("show");
+  clearTimeout(confetiTO);
+  confetiTO = setTimeout(()=>{ o.classList.remove("show"); o.innerHTML=""; }, 6500);
+}
 function playVideo(file){
   if(!file){ stopCortinilla(); return; }                       // sin video -> CSS
   if(cortvid.classList.contains("show") && cortvid.dataset.file===file) return;
@@ -267,6 +299,8 @@ function playVideo(file){
   cortvid.play().catch(()=>cortvid.classList.remove("show"));
 }
 function stopCortinilla(){ if(cortvid.classList.contains("show")){ cortvid.classList.remove("show"); cortvid.pause(); cortvid.dataset.file=""; } }
+// Al terminar el video de DESPEDIDA -> pasa solo a la pantalla final (marcador + ambos logos)
+cortvid.addEventListener("ended", ()=>{ if(STATE.evento.estado==="despedida"){ try{ db.ref("evento/estado").set("marcadorfinal"); }catch(_){} } });
 
 function casoActual(){ return CASOS.find(c => c.id === (STATE.evento.caso_actual||1)) || CASOS[0]; }
 function enPenalesP(){ return STATE.evento.modo==="penales"; }
@@ -281,7 +315,8 @@ function pintarScore(){
   document.getElementById("sControl").textContent = marcadorEquipo("control") + " ⚽";
   const e = STATE.evento.estado;
   casoLbl.textContent = (e==="lobby") ? "Esperando jugadores"
-    : (e==="final") ? "Marcador final"
+    : (e==="final"||e==="marcadorfinal") ? "Marcador final"
+    : (e==="finpartido") ? "Fin del partido"
     : enPenalesP() ? ("Penal " + (STATE.evento.penal||1) + (e==="penintro"?"":(" de "+PENALES.length)))
     : ("Caso " + numPregunta(STATE.evento.caso_actual||1, STATE.evento.ponente));
 }
@@ -292,7 +327,7 @@ function nRespuestas(){
 }
 function nConectados(){ return Object.values(STATE.jugadores||{}).filter(j=>j.conectado!==false).length; }
 
-const IDLE_STATES = ["lobby","cortinilla","cierre","final"];
+const IDLE_STATES = ["lobby","cortinilla","cierre","final","finpartido","marcadorfinal"];
 function paintCtxSlideIdx(media, idx){
   const s = document.querySelector("#ctxoverlay .ctxslide"); if(!s) return;
   const m = media[idx] || media[0];
@@ -424,7 +459,7 @@ function render(){
   if(e==="cortinilla") playVideo((casoActual()||{}).cortinilla);
   else if(e==="despedida") playVideo(DESPEDIDA);
   else stopCortinilla();
-  if(e==="bloqueo" && lastWhistleState!=="bloqueo"){ try{ silbato.currentTime=0; silbato.play().catch(()=>{}); }catch(_){} }
+  if((e==="bloqueo"||e==="finpartido") && lastWhistleState!==e){ try{ silbato.currentTime=0; silbato.play().catch(()=>{}); }catch(_){} }
   lastWhistleState = e;
   // sonido de reloj durante la cuenta regresiva
   if(e==="responder"){ if(reloj.paused){ reloj.currentTime=0; reloj.play().catch(()=>{}); } }
@@ -444,7 +479,7 @@ function render(){
   // instrucción de Firebase, porque eso reinicia el video desde 0. Solo se reconstruye
   // cuando realmente cambia el estado/slide/ponente.
   const videoEscena = (e==="presentacion" || e==="contexto" || e==="transicion");
-  const guardEscena = videoEscena || e==="var";   // var también: evita re-render/re-fade en cada instrucción
+  const guardEscena = videoEscena || e==="var" || e==="finpartido" || e==="marcadorfinal";   // estáticos: construir una vez (no re-lanzar confeti/reiniciar logos)
   const sceneKey = [e, STATE.evento.caso_actual, STATE.evento.penal, STATE.evento.ctx_slide, STATE.evento.var_slide, STATE.evento.trans, STATE.evento.ponente].join("|");
   const skipScene = guardEscena && sceneKey===lastSceneKey;
   lastSceneKey = sceneKey;
@@ -573,12 +608,39 @@ function render(){
     scene.innerHTML = `<div class="big pop" style="font-size:64px">🥅 ¡VAMOS A PENALES!</div>
       <div class="muted" style="font-size:26px;margin-top:12px">El empate se define desde el punto penal</div>`;
   }
-  else if(e==="final"){
-    let r, cc;
+  else if(e==="finpartido"){
+    scene.innerHTML = `<div class="finwrap pop">
+        ${WHISTLE}
+        <div class="big" style="font-size:108px;line-height:.95">FIN DEL<br>PARTIDO</div>
+        <div class="muted" style="font-size:28px;margin-top:10px">El árbitro pita el final</div>
+      </div>`;
+    lanzarConfeti();
+  }
+  else if(e==="final" || e==="marcadorfinal"){
+    let r=(STATE.equipos.rapido||{}).goles||0, cc=(STATE.equipos.control||{}).goles||0;
     if(enPenalesP()){ r=(STATE.equipos.rapido||{}).penales||0; cc=(STATE.equipos.control||{}).penales||0; }
-    else { r=puntajeNormalizado((STATE.equipos.rapido||{}).puntaje||0, jugadoresPorEquipo("rapido"));
-           cc=puntajeNormalizado((STATE.equipos.control||{}).puntaje||0, jugadoresPorEquipo("control")); }
     const winKey = r>cc ? "rapido" : (cc>r ? "control" : null);
+    if(e==="marcadorfinal"){
+      const tR=TEAMS.rapido, tC=TEAMS.control;
+      scene.innerHTML = `<div class="tag">Marcador final</div>
+        <div class="finalboard">
+          <div class="fbteam ${winKey==='rapido'?'win':''}">
+            <video class="fblogo" src="../assets/escudo_inicio_rapido.mp4" poster="../assets/escudo_inicio_rapido.png" autoplay loop muted playsinline></video>
+            <div class="fbname" style="color:${tR.color}">${tR.emoji} ${tR.nombre}</div>
+            <div class="fbnum" style="color:${tR.color}">${r}</div>
+          </div>
+          <div class="fbvs">⚽</div>
+          <div class="fbteam ${winKey==='control'?'win':''}">
+            <video class="fblogo" src="../assets/escudo_control_sostenido.mp4" poster="../assets/escudo_control_sostenido.png" autoplay loop muted playsinline></video>
+            <div class="fbname" style="color:${tC.color}">${tC.emoji} ${tC.nombre}</div>
+            <div class="fbnum" style="color:${tC.color}">${cc}</div>
+          </div>
+        </div>
+        <div class="big pop" style="font-size:46px;margin-top:8px">${winKey?('🏆 Campeón: '+TEAMS[winKey].nombre):'¡Empate!'}</div>
+        <div class="msgkey" style="margin-top:18px">¡Gracias por jugar! · Ki-CAB, la jugada ganadora en acidez, reflujo y gastritis leves/moderadas.</div>`;
+      if(winKey) lanzarConfeti();
+      return;
+    }
     let html = `<div class="tag">Marcador final</div>`;
     if(winKey){
       const t = TEAMS[winKey];
