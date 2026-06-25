@@ -84,6 +84,20 @@
   .teal{color:var(--teal)} .green{color:var(--green)}
   .pulse{animation:pulsemod 1s infinite}
   @keyframes pulsemod{0%,100%{opacity:1}50%{opacity:.55}}
+  /* Mini-timeline de progreso (siempre visible) */
+  #flowbar{height:6px;border-radius:999px;background:rgba(255,255,255,.10);overflow:hidden;margin-top:12px}
+  #flowfill{height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#19c3d6,#8ce021);transition:width .35s ease}
+  /* Modo ensayo: banner + panel de saltos */
+  #jumppanel:empty{display:none}
+  .ensayobar{background:rgba(255,193,99,.16);border:1px solid rgba(255,193,99,.5);color:#ffd9a3;
+    border-radius:12px;padding:9px 12px;font-size:13px;font-weight:800;text-align:center;margin-bottom:10px}
+  .jumpcard{background:rgba(20,28,42,.80);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:12px}
+  .jumpcard h4{margin:0 0 8px;font-size:14px;font-weight:900;color:#cfd8e3}
+  .jumpgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .jumpbtn{font-family:inherit;text-align:left;font-weight:700;font-size:13px;padding:11px 12px;border-radius:11px;cursor:pointer;
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);color:#fff}
+  .jumpbtn.now{background:var(--teal);color:#06222a;border-color:var(--teal)}
+  .jumpbtn:active{transform:scale(.97)}
 </style>
 </head><body>
 <video id="bgloop" src="../assets/loop.mp4" autoplay loop muted playsinline></video>
@@ -98,7 +112,9 @@
     <div class="tag">Estado actual</div>
     <div class="st" id="stName">—</div>
     <div class="caso" id="stCaso"></div>
+    <div id="flowbar"><div id="flowfill"></div></div>
   </div>
+  <div id="jumppanel"></div>
   <div class="stats">
     <div class="stat card"><div class="n" id="nConn">0</div><div class="l">Conectados</div></div>
     <div class="stat card"><div class="n" id="nRap" style="color:var(--teal)">0</div><div class="l">⚡ Rápido</div></div>
@@ -115,6 +131,7 @@
       <div class="custom">otro: <input id="dur" type="number" min="5" max="120" value="15"> seg</div>
     </div>
     <div class="actions" style="margin-top:12px">
+      <button class="btn ghost mini" id="ensayoBtn" onclick="toggleEnsayo()">🧪 Modo ensayo</button>
       <button class="btn ghost mini" onclick="exportarCSV()">📋 Exportar participantes (CSV)</button>
       <button class="btn ghost mini" onclick="exportar()">⬇️ Exportar analítica (JSON)</button>
       <button class="btn ghost mini" onclick="if(confirm('¿Retroceder un paso para corregir el estado?'))atras()">↩️ Atrás (corregir estado)</button>
@@ -242,6 +259,52 @@ function revelar(){
 }
 
 let rosterOpen = false, overlaysOpen = false;
+let ensayo = (typeof localStorage!=="undefined" && localStorage.getItem("pe_ensayo")==="1");
+function toggleEnsayo(){
+  if(!ensayo){ if(!confirm("Activar MODO ENSAYO: te permite saltar entre actos para probar con el ponente.\n\nÚsalo SOLO antes del evento. Recuerda apagarlo en vivo.")) return; }
+  ensayo = !ensayo;
+  try{ localStorage.setItem("pe_ensayo", ensayo?"1":"0"); }catch(_){}
+  render();
+}
+/* Lista de "actos" del evento (consciente del ponente) para saltar / timeline */
+function listaActos(){
+  const pon = EV.ponente, seq = secuenciaPonente(pon), L = [];
+  const goCort = id => ()=>setEstado("cortinilla",{caso_actual:id, modo:null, penal:null});
+  L.push({k:"lobby", l:"🏟️ Lobby",            j:()=>setEstado("lobby",{caso_actual:1, modo:null, penal:null})});
+  L.push({k:"pres",  l:"🎬 Presentación",      j:()=>setEstado("presentacion",{caso_actual:1, modo:null, penal:null})});
+  L.push({k:"ctx1",  l:"🎞️ Contexto Caso 1",   j:()=>setEstado("contexto",{caso_actual:1, ctx_slide:0, modo:null, penal:null})});
+  seq.filter(id=>id<=4).forEach(id=> L.push({k:"q"+id, l:"❓ Pregunta "+numPregunta(id,pon), j:goCort(id)}));
+  L.push({k:"medio", l:"⏸️ Medio tiempo",      j:()=>setEstado("transicion",{trans:"inicio2T", modo:null, penal:null})});
+  L.push({k:"ctx2",  l:"🎞️ Contexto Caso 2",   j:()=>setEstado("contexto",{caso_actual:5, ctx_slide:0, modo:null, penal:null})});
+  seq.filter(id=>id>=5).forEach(id=> L.push({k:"q"+id, l:"❓ Pregunta "+numPregunta(id,pon), j:goCort(id)}));
+  L.push({k:"penales", l:"🥅 Penales",          j:()=>db.ref("evento").update({modo:"penales", penal:1, estado:"penintro", empate:false, gol_ronda:null, mostrar_contexto:false, mostrar_qr:false})});
+  L.push({k:"fin",   l:"🏁 Fin / Ganador",     j:()=>setEstado("final")});
+  L.push({k:"marcador", l:"🏆 Marcador final",  j:()=>setEstado("marcadorfinal")});
+  return L;
+}
+function actoActualKey(){
+  const e = EV.estado;
+  if(e==="lobby") return "lobby";
+  if(e==="presentacion") return "pres";
+  if(enPenales()) return "penales";
+  if(e==="transicion") return "medio";
+  if(e==="finpartido" || e==="final") return "fin";
+  if(e==="despedida" || e==="marcadorfinal") return "marcador";
+  if(e==="contexto") return (EV.caso_actual||1)<=4 ? "ctx1" : "ctx2";
+  if(["cortinilla","pregunta","opciones","responder","bloqueo","resultado","var"].includes(e)) return "q"+(EV.caso_actual||1);
+  return "";
+}
+function renderJump(){
+  const cont = document.getElementById("jumppanel");
+  const btn = document.getElementById("ensayoBtn"); if(btn) btn.textContent = ensayo ? "🧪 Modo ensayo: ON (tocar para apagar)" : "🧪 Modo ensayo";
+  if(!ensayo){ cont.innerHTML=""; return; }
+  const actos = listaActos(), cur = actoActualKey();
+  cont.innerHTML = `<div class="ensayobar">🧪 MODO ENSAYO — saltos activos (apágalo antes del evento)</div>
+    <div class="jumpcard"><h4>Saltar a acto</h4><div class="jumpgrid">`
+    + actos.map((a,i)=>`<button class="jumpbtn ${a.k===cur?'now':''}" data-i="${i}">${a.l}</button>`).join("")
+    + `</div></div>`;
+  cont.querySelectorAll(".jumpbtn").forEach(b=>{ b.onclick=()=>{ actos[+b.dataset.i].j(); }; });
+}
 function toggleRoster(){ rosterOpen = !rosterOpen; renderRoster(); }
 function buildDurChips(){
   const wrap=document.getElementById("durchips"); const inp=document.getElementById("dur");
@@ -350,6 +413,11 @@ function render(){
   document.getElementById("nConn").textContent = Object.values(JUG).filter(j=>j.conectado!==false).length;
   document.getElementById("nRap").textContent = jugN("rapido");
   document.getElementById("nCon").textContent = jugN("control");
+
+  // Mini-timeline (progreso) + panel de saltos (modo ensayo)
+  const _actos=listaActos(), _idx=_actos.findIndex(x=>x.k===actoActualKey());
+  document.getElementById("flowfill").style.width = (_idx<0?0:Math.round((_idx+1)/_actos.length*100))+"%";
+  renderJump();
 
   const vi=document.getElementById("varInfo");
   const nv=Object.keys(VARS).length;
