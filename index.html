@@ -5,17 +5,21 @@
 <title>El Partido de la Evidencia · Ki-CAB</title>
 <link rel="stylesheet" href="assets/style.css">
 <style>
- .cards{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;max-width:1040px}
+ .cards{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;align-items:flex-start;max-width:1040px}
  .card{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);
-  border-radius:16px;padding:18px;width:236px;text-align:center}
+  border-radius:16px;padding:18px;width:240px;text-align:center}
  .card .t{font-weight:800;font-size:19px;margin-bottom:4px}
- .card .d{color:var(--muted);font-size:13px;min-height:34px;margin-bottom:6px}
- .card .row{display:flex;gap:8px;margin-top:auto}
+ .card .d{color:var(--muted);font-size:13px;min-height:34px;margin-bottom:10px}
+ .col{display:flex;flex-direction:column;gap:8px;margin-top:auto}
+ .row{display:flex;gap:8px}
  .ibtn{flex:1;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;
-  font-family:inherit;font-weight:800;font-size:15px;padding:13px 10px;border-radius:12px;cursor:pointer;border:none}
- .ibtn.go{background:var(--green);color:#06210a}
- .ibtn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
- .ibtn.ghost:active{background:rgba(255,255,255,.06)}
+  font-family:inherit;font-weight:800;font-size:15px;padding:13px 10px;border-radius:12px;cursor:pointer;
+  border:none;background:transparent;color:var(--text);border:1px solid var(--line)}
+ .ibtn.go{background:var(--green);color:#06210a;border:none}
+ .ibtn:active{transform:scale(.97)}
+ .ibtn.teamr{background:rgba(25,195,214,.16);border:1px solid rgba(25,195,214,.5);color:var(--teal)}
+ .ibtn.teamc{background:rgba(140,224,33,.16);border:1px solid rgba(140,224,33,.5);color:var(--green)}
+ .entrar-link{font-size:12px;color:var(--muted);text-decoration:underline;margin-top:8px;display:inline-block}
  /* Modal QR a pantalla completa */
  #qrmodal{position:fixed;inset:0;z-index:100;background:rgba(7,10,16,.97);display:none;
   flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px}
@@ -30,16 +34,34 @@
 <div class="fill center pad">
   <div class="tag">Polar Multimedia · Carnot / Ki-CAB</div>
   <h1 class="brand" style="font-size:36px;margin:10px 0 4px">El Partido <span class="kc">de la Evidencia</span></h1>
-  <p class="muted" style="margin:0 0 24px">Elige tu vista — entra o muestra su QR</p>
+  <p class="muted" style="margin:0 0 24px">Entra o muestra el acceso de cada vista</p>
   <div class="cards">
+
     <div class="card"><div class="t accent">📺 Pantalla</div><div class="d">Proyección en el salón</div>
-      <div class="row"><a class="ibtn go" href="pantalla/">Entrar</a><button class="ibtn ghost" onclick="verQR('pantalla/','📺 Pantalla')">Ver QR</button></div></div>
+      <div class="col">
+        <a class="ibtn go" href="pantalla/">Entrar</a>
+        <button class="ibtn" onclick="compartirURL('pantalla/','Pantalla · El Partido de la Evidencia')">🔗 Compartir URL</button>
+      </div></div>
+
     <div class="card"><div class="t" style="color:var(--warn)">🎛️ Control</div><div class="d">Animador / host (smartphone)</div>
-      <div class="row"><a class="ibtn go" href="moderador/">Entrar</a><button class="ibtn ghost" onclick="verQR('moderador/','🎛️ Control')">Ver QR</button></div></div>
-    <div class="card"><div class="t teal" style="color:var(--teal)">📱 Médico</div><div class="d">Participante</div>
-      <div class="row"><a class="ibtn go" href="mesa/">Entrar</a><button class="ibtn ghost" onclick="verQR('mesa/','📱 Médico')">Ver QR</button></div></div>
+      <div class="col">
+        <a class="ibtn go" href="moderador/">Entrar</a>
+        <button class="ibtn" onclick="verQR('moderador/','🎛️ Control')">Ver QR</button>
+      </div></div>
+
+    <div class="card"><div class="t teal" style="color:var(--teal)">📱 Médico</div><div class="d">QR por equipo (cada lado del salón)</div>
+      <div class="col">
+        <button class="ibtn teamr" onclick="verQR('mesa/?equipo=rapido','⚡ Inicio Rápido')">⚡ QR Inicio Rápido</button>
+        <button class="ibtn teamc" onclick="verQR('mesa/?equipo=control','🛡️ Control Sostenido')">🛡️ QR Control Sostenido</button>
+        <a class="entrar-link" href="mesa/">Entrar (elegir equipo)</a>
+      </div></div>
+
     <div class="card"><div class="t" style="color:#ff9f43">🎤 Ponente</div><div class="d">Avanza slides de contexto y VAR</div>
-      <div class="row"><a class="ibtn go" href="ponente/">Entrar</a><button class="ibtn ghost" onclick="verQR('ponente/','🎤 Ponente')">Ver QR</button></div></div>
+      <div class="col">
+        <a class="ibtn go" href="ponente/">Entrar</a>
+        <button class="ibtn" onclick="verQR('ponente/','🎤 Ponente')">Ver QR</button>
+      </div></div>
+
   </div>
 </div>
 
@@ -47,7 +69,7 @@
   <div id="qrtitle"></div>
   <div id="qrbig"></div>
   <div id="qrurl"></div>
-  <button class="ibtn ghost" onclick="cerrarQR()">✕ Cerrar</button>
+  <button class="ibtn" onclick="cerrarQR()">✕ Cerrar</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -58,11 +80,17 @@
     document.getElementById("qrtitle").textContent = title;
     document.getElementById("qrurl").textContent = url;
     const box = document.getElementById("qrbig"); box.innerHTML = "";
-    const sz = Math.round(Math.min(window.innerWidth*0.82, window.innerHeight*0.62, 560));
+    const sz = Math.round(Math.min(window.innerWidth*0.82, window.innerHeight*0.6, 560));
     if(typeof QRCode!=="undefined") new QRCode(box, { text:url, width:sz, height:sz, colorDark:"#0a0e15", colorLight:"#ffffff" });
     document.getElementById("qrmodal").classList.add("show");
   }
   function cerrarQR(){ document.getElementById("qrmodal").classList.remove("show"); }
+  function compartirURL(path, title){
+    const url = base + path;
+    if(navigator.share){ navigator.share({ title, url }).catch(()=>{}); return; }
+    if(navigator.clipboard){ navigator.clipboard.writeText(url).then(()=>alert("URL copiada:\n"+url)).catch(()=>prompt("Copia la URL:", url)); }
+    else prompt("Copia la URL:", url);
+  }
   document.addEventListener("keydown", e=>{ if(e.key==="Escape") cerrarQR(); });
 </script>
 </body></html>
