@@ -98,6 +98,14 @@
     background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);color:#fff}
   .jumpbtn.now{background:var(--teal);color:#06222a;border-color:var(--teal)}
   .jumpbtn:active{transform:scale(.97)}
+  /* Diálogo de salida del modo ensayo */
+  #exitmodal{position:fixed;inset:0;z-index:120;background:rgba(7,10,16,.96);display:none;
+    align-items:center;justify-content:center;padding:24px}
+  #exitmodal.show{display:flex}
+  .exitcard{max-width:460px;width:100%;display:flex;flex-direction:column;gap:12px;text-align:center}
+  .exittitle{font-size:22px;font-weight:900}
+  .exitmsg{color:#cfd8e3;font-size:15px;line-height:1.5;margin-bottom:6px}
+  .exitcard .btn{font-size:17px;padding:16px}
 </style>
 </head><body>
 <video id="bgloop" src="../assets/loop.mp4" autoplay loop muted playsinline></video>
@@ -142,6 +150,16 @@
   <div id="cfgnote"></div>
 </div>
 <div id="dock"><div id="prim"></div></div>
+
+<div id="exitmodal" onclick="if(event.target===this)cerrarExit()">
+  <div class="exitcard">
+    <div class="exittitle">🧪 Salir del modo ensayo</div>
+    <div class="exitmsg" id="exitmsg"></div>
+    <button class="btn term" onclick="finEnsayo('continuar')">▶️ Continuar el evento desde aquí</button>
+    <button class="btn danger" onclick="finEnsayo('reiniciar')">🔄 Reiniciar el evento (empezar limpio)</button>
+    <button class="btn ghost mini" onclick="cerrarExit()">Cancelar (seguir en ensayo)</button>
+  </div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -261,10 +279,29 @@ function revelar(){
 let rosterOpen = false, overlaysOpen = false;
 let ensayo = (typeof localStorage!=="undefined" && localStorage.getItem("pe_ensayo")==="1");
 function toggleEnsayo(){
-  if(!ensayo){ if(!confirm("Activar MODO ENSAYO: te permite saltar entre actos para probar con el ponente.\n\nÚsalo SOLO antes del evento. Recuerda apagarlo en vivo.")) return; }
-  ensayo = !ensayo;
-  try{ localStorage.setItem("pe_ensayo", ensayo?"1":"0"); }catch(_){}
-  render();
+  if(!ensayo){ // ENCENDER
+    if(!confirm("Activar MODO ENSAYO: te permite saltar entre actos para probar con el ponente.\n\nÚsalo SOLO antes del evento. Recuerda apagarlo en vivo.")) return;
+    ensayo = true; try{ localStorage.setItem("pe_ensayo","1"); }catch(_){}
+    render();
+  } else {           // APAGAR -> preguntar dónde queda
+    abrirSalidaEnsayo();
+  }
+}
+function abrirSalidaEnsayo(){
+  const actos = listaActos(), a = actos.find(x=>x.k===actoActualKey());
+  document.getElementById("exitmsg").innerHTML =
+    "Estás dejando el evento en:<br><b style='font-size:18px'>"+ (a?a.l:"—") +"</b><br><br>¿Continúas el evento desde aquí o lo reinicias para empezar limpio?";
+  document.getElementById("exitmodal").classList.add("show");
+}
+function cerrarExit(){ document.getElementById("exitmodal").classList.remove("show"); }
+function finEnsayo(modo){
+  cerrarExit();
+  ensayo = false; try{ localStorage.setItem("pe_ensayo","0"); }catch(_){}
+  if(modo==="reiniciar"){
+    db.ref().update({ evento:{estado:"lobby",caso_actual:1}, respuestas:null, scored:null,
+      equipos:{rapido:{puntaje:0,racha:0},control:{puntaje:0,racha:0}}, var_solicitudes:null, jugadores:null, reacciones:null });
+  }
+  render(); // "continuar" deja el estado actual tal cual
 }
 /* Lista de "actos" del evento (consciente del ponente) para saltar / timeline */
 function listaActos(){
