@@ -48,8 +48,11 @@
     padding:14px 14px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;
     background:linear-gradient(rgba(8,11,17,0),rgba(8,11,17,.55) 18%,rgba(8,11,17,.90) 55%)}
   #prim{display:flex;flex-direction:column;gap:10px}
-  #prim .btn.primary{font-size:27px;font-weight:900;padding:28px 22px;border-radius:24px;color:#241405;
+  #prim .btn.primary{font-weight:900;padding:22px 20px;border-radius:24px;color:#241405;
+    display:flex;flex-direction:column;align-items:center;gap:5px;
     background:linear-gradient(135deg,#ffc163,#ff7e5f);box-shadow:0 12px 32px rgba(255,126,95,.42)}
+  #prim .btn.primary .pstep{font-size:14px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;opacity:.78}
+  #prim .btn.primary .pdesc{font-size:24px;font-weight:900;line-height:1.15}
   #prim .btn.primary.go{background:linear-gradient(135deg,#7ee787,#19c3d6);color:#062019;
     box-shadow:0 12px 32px rgba(25,195,214,.42)}
   #prim .navrow{display:flex;gap:10px;align-items:center}
@@ -349,7 +352,11 @@ function render(){
   function add(label, fn, cls){ const b=document.createElement("button");
     b.className="btn "+(cls||"ghost mini"); b.textContent=label; b.onclick=fn; a.appendChild(b); return b; }
   function addP(label, fn, cls){ const b=document.createElement("button");
-    b.className="btn primary"+(cls?(" "+cls):""); b.textContent=label; b.onclick=fn; prim.appendChild(b); return b; }
+    b.className="btn primary"+(cls?(" "+cls):"");
+    const eb=document.createElement("span"); eb.className="pstep"; eb.textContent="SIGUIENTE PASO";
+    const ds=document.createElement("span"); ds.className="pdesc"; ds.textContent=label;
+    b.appendChild(eb); b.appendChild(ds);
+    b.onclick=fn; prim.appendChild(b); return b; }
 
   // ===== BOTÓN PRINCIPAL (dock fijo abajo) ===== (.go = verde "avanzar")
   switch(EV.estado){
