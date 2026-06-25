@@ -5,6 +5,11 @@
 <title>El Partido de la Evidencia · Ki-CAB</title>
 <link rel="stylesheet" href="assets/style.css">
 <style>
+ /* Permitir scroll vertical en móvil (el .fill por defecto es fixed y recorta) */
+ html,body{height:auto;min-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch}
+ .fill{position:static;min-height:100vh}
+ .center{justify-content:flex-start}
+ .pad{padding:24px 20px 48px}
  .cards{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;align-items:flex-start;max-width:1040px}
  .card{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);
   border-radius:16px;padding:18px;width:240px;text-align:center}
