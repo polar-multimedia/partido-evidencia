@@ -93,6 +93,9 @@
     border-radius:12px;padding:9px 12px;font-size:13px;font-weight:800;text-align:center;margin-bottom:10px}
   .jumpcard{background:rgba(20,28,42,.80);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:12px}
   .jumpcard h4{margin:0 0 8px;font-size:14px;font-weight:900;color:#cfd8e3}
+  .jumpsec{font-size:12px;font-weight:900;letter-spacing:.10em;text-transform:uppercase;color:var(--teal);
+    margin:14px 0 8px;padding-top:10px;border-top:1px solid rgba(255,255,255,.10)}
+  .jumpsec:first-of-type{border-top:none;padding-top:0;margin-top:4px}
   .jumpgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .jumpbtn{font-family:inherit;text-align:left;font-weight:700;font-size:13px;padding:11px 12px;border-radius:11px;cursor:pointer;
     background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);color:#fff}
@@ -303,26 +306,34 @@ function finEnsayo(modo){
   }
   render(); // "continuar" deja el estado actual tal cual
 }
-/* Lista de "actos" del evento (consciente del ponente) para saltar / timeline */
-function listaActos(){
-  const pon = EV.ponente, seq = secuenciaPonente(pon), L = [];
-  const addPreg = id => {
-    const n = numPregunta(id, pon);
-    L.push({k:"cort"+id, l:"🎬 Cortinilla "+n,  j:()=>setEstado("cortinilla",{caso_actual:id, modo:null, penal:null})});
-    L.push({k:"q"+id,    l:"❓ Pregunta "+n,     j:()=>setEstado("pregunta",{caso_actual:id, modo:null, penal:null})});
-  };
-  L.push({k:"lobby", l:"🏟️ Lobby",            j:()=>setEstado("lobby",{caso_actual:1, modo:null, penal:null})});
-  L.push({k:"pres",  l:"🎬 Presentación",      j:()=>setEstado("presentacion",{caso_actual:1, modo:null, penal:null})});
-  L.push({k:"ctx1",  l:"🎞️ Contexto Caso 1",   j:()=>setEstado("contexto",{caso_actual:1, ctx_slide:0, modo:null, penal:null})});
-  seq.filter(id=>id<=4).forEach(addPreg);
-  L.push({k:"medio", l:"⏸️ Medio tiempo",      j:()=>setEstado("transicion",{trans:"inicio2T", modo:null, penal:null})});
-  L.push({k:"ctx2",  l:"🎞️ Contexto Caso 2",   j:()=>setEstado("contexto",{caso_actual:5, ctx_slide:0, modo:null, penal:null})});
-  seq.filter(id=>id>=5).forEach(addPreg);
-  L.push({k:"penales", l:"🥅 Penales",          j:()=>db.ref("evento").update({modo:"penales", penal:1, estado:"penintro", empate:false, gol_ronda:null, mostrar_contexto:false, mostrar_qr:false})});
-  L.push({k:"fin",   l:"🏁 Fin / Ganador",     j:()=>setEstado("final")});
-  L.push({k:"marcador", l:"🏆 Marcador final",  j:()=>setEstado("marcadorfinal")});
-  return L;
+/* "Actos" del evento agrupados en secciones (consciente del ponente) para saltar / timeline */
+function seccionesActos(){
+  const pon = EV.ponente, seq = secuenciaPonente(pon);
+  const cort = id => ({k:"cort"+id, l:"🎬 Cortinilla "+numPregunta(id,pon), j:()=>setEstado("cortinilla",{caso_actual:id, modo:null, penal:null})});
+  const preg = id => ({k:"q"+id,    l:"❓ Pregunta "+numPregunta(id,pon),    j:()=>setEstado("pregunta",{caso_actual:id, modo:null, penal:null})});
+  const qs   = ids => ids.reduce((acc,id)=>acc.concat([cort(id),preg(id)]), []);
+  return [
+    { t:"Inicio", items:[
+      {k:"lobby", l:"🏟️ Lobby",               j:()=>setEstado("lobby",{caso_actual:1, modo:null, penal:null})},
+      {k:"pres",  l:"🎤 Presentación ponente", j:()=>setEstado("presentacion",{caso_actual:1, modo:null, penal:null})},
+    ]},
+    { t:"⚽ Primer tiempo", items:[
+      {k:"ctx1", l:"🎞️ Contexto primer tiempo", j:()=>setEstado("contexto",{caso_actual:1, ctx_slide:0, modo:null, penal:null})},
+      ...qs(seq.filter(id=>id<=4)),
+    ]},
+    { t:"⚽ Segundo tiempo", items:[
+      {k:"medio", l:"⏸️ Medio tiempo",            j:()=>setEstado("transicion",{trans:"inicio2T", modo:null, penal:null})},
+      {k:"ctx2",  l:"🎞️ Contexto segundo tiempo", j:()=>setEstado("contexto",{caso_actual:5, ctx_slide:0, modo:null, penal:null})},
+      ...qs(seq.filter(id=>id>=5)),
+    ]},
+    { t:"🏁 Cierre", items:[
+      {k:"penales",  l:"🥅 Penales",         j:()=>db.ref("evento").update({modo:"penales", penal:1, estado:"penintro", empate:false, gol_ronda:null, mostrar_contexto:false, mostrar_qr:false})},
+      {k:"fin",      l:"🏁 Fin / Ganador",   j:()=>setEstado("final")},
+      {k:"marcador", l:"🏆 Marcador final",  j:()=>setEstado("marcadorfinal")},
+    ]},
+  ];
 }
+function listaActos(){ return seccionesActos().reduce((a,s)=>a.concat(s.items), []); }
 function actoActualKey(){
   const e = EV.estado;
   if(e==="lobby") return "lobby";
@@ -340,12 +351,16 @@ function renderJump(){
   const cont = document.getElementById("jumppanel");
   const btn = document.getElementById("ensayoBtn"); if(btn) btn.textContent = ensayo ? "🧪 Modo ensayo: ON (tocar para apagar)" : "🧪 Modo ensayo";
   if(!ensayo){ cont.innerHTML=""; return; }
-  const actos = listaActos(), cur = actoActualKey();
-  cont.innerHTML = `<div class="ensayobar">🧪 MODO ENSAYO — saltos activos (apágalo antes del evento)</div>
-    <div class="jumpcard"><h4>Saltar a acto</h4><div class="jumpgrid">`
-    + actos.map((a,i)=>`<button class="jumpbtn ${a.k===cur?'now':''}" data-i="${i}">${a.l}</button>`).join("")
-    + `</div></div>`;
-  cont.querySelectorAll(".jumpbtn").forEach(b=>{ b.onclick=()=>{ actos[+b.dataset.i].j(); }; });
+  const secs = seccionesActos(), cur = actoActualKey();
+  let html = `<div class="ensayobar">🧪 MODO ENSAYO — saltos activos (apágalo antes del evento)</div><div class="jumpcard"><h4>Saltar a acto</h4>`;
+  secs.forEach(s=>{
+    html += `<div class="jumpsec">${s.t}</div><div class="jumpgrid">`
+      + s.items.map(a=>`<button class="jumpbtn ${a.k===cur?'now':''}" data-k="${a.k}">${a.l}</button>`).join("")
+      + `</div>`;
+  });
+  cont.innerHTML = html + `</div>`;
+  const flat = listaActos();
+  cont.querySelectorAll(".jumpbtn").forEach(b=>{ b.onclick=()=>{ const a=flat.find(x=>x.k===b.dataset.k); if(a) a.j(); }; });
 }
 function toggleRoster(){ rosterOpen = !rosterOpen; renderRoster(); }
 function buildDurChips(){
