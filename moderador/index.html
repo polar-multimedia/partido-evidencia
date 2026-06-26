@@ -150,11 +150,13 @@
     <div class="stat card"><div class="n" id="nRap" style="color:var(--teal)">0</div><div class="l">⚡ Rápido</div></div>
     <div class="stat card"><div class="n" id="nCon" style="color:var(--green)">0</div><div class="l">🛡️ Control</div></div>
   </div>
-  <button class="btn ghost mini" id="rosterBtn" onclick="toggleRoster()">👥 Ver integrantes de los equipos</button>
-  <div id="roster"></div>
   <div id="varInfo"></div>
   <div class="actions" id="actions"></div>
   <details class="card"><summary>🛠️ Herramientas</summary>
+    <div class="actions" style="margin-top:10px">
+      <button class="btn ghost mini" id="rosterBtn" onclick="toggleRoster()">👥 Ver integrantes de los equipos</button>
+    </div>
+    <div id="roster"></div>
     <div class="cfg" style="margin-top:10px">
       <div>⏱ Duración por pregunta</div>
       <div class="chips" id="durchips"></div>
@@ -428,6 +430,23 @@ function atras(){
   }
   const p=ATRAS[EV.estado]; if(p) setEstado(p);
 }
+/* Describe a dónde regresa el botón "Regresar" desde el estado actual */
+function destinoAtras(){
+  const pon=EV.ponente;
+  if(enPenales()){
+    const e=EV.estado, pn=EV.penal||1;
+    if(e==="pregunta") return pn<=1 ? "Vamos a penales" : ("Resultado del penal "+(pn-1));
+    const m={opciones:"Pregunta del penal", responder:"Opciones", bloqueo:"Cierre de tiempo", resultado:"Cierre de tiempo", penintro:"VAR anterior"};
+    return m[e]||"";
+  }
+  const prev = ATRAS[EV.estado]; if(!prev) return "";
+  const n = numPregunta(EV.caso_actual||1, pon);
+  const names = { lobby:"Lobby", presentacion:"Presentación", contexto:"Contexto",
+    cortinilla:"Cortinilla "+n, pregunta:"Pregunta "+n, opciones:"Opciones",
+    responder:"Cronómetro", bloqueo:"Cierre de tiempo", resultado:"Resultado",
+    var:"VAR", final:"Ganador", despedida:"Despedida" };
+  return names[prev] || (ST_NOMBRE[prev]||prev);
+}
 
 function reiniciar(){
   if(!confirm("¿Reiniciar el evento? Se borran respuestas, puntajes y jugadores.")) return;
@@ -572,14 +591,10 @@ function render(){
   if(EV.estado==="var"){ const vm=varMediaPonente(preg(), EV.ponente); if(vm.length>1) navSlides("var_slide", vm.length); }
 
   // ===== CONTROLES SECUNDARIOS (cuerpo, con scroll) =====
-  // Ver contexto a demanda durante las preguntas
-  const ncx = contextoPonente(casoClinico(), EV.ponente).length;
-  if(!enPenales() && ncx && ["cortinilla","pregunta","opciones","responder","bloqueo","resultado","var"].includes(EV.estado)){
-    add(EV.mostrar_contexto?"🙈 Ocultar contexto":"👁 Ver contexto", toggleContexto, "ghost mini");
-  }
-  // Atrás (deshacer) durante el flujo
+  // Regresar (deshacer) durante el flujo — indica a dónde regresa
   if(ATRAS[EV.estado] || (enPenales() && ["pregunta","opciones","responder","bloqueo","resultado"].includes(EV.estado))){
-    add("↩️ Atrás (undo)", atras, "ghost mini");
+    const dest = destinoAtras();
+    add("↩️ Regresar"+(dest?" a: "+dest:""), atras, "ghost mini");
   }
   // Cambiar árbitro (lobby con árbitro)
   if(EV.estado==="lobby" && EV.ponente){
