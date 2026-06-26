@@ -55,6 +55,13 @@
     background:linear-gradient(135deg,#ffc163,#ff7e5f);box-shadow:0 12px 32px rgba(255,126,95,.42)}
   #prim .btn.primary .pstep{font-size:14px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;opacity:.78}
   #prim .btn.primary .pdesc{font-size:24px;font-weight:900;line-height:1.15}
+  #prim .btn.primary .psub{font-size:14px;font-weight:700;opacity:.72;margin-top:3px}
+  /* Modal elegir ponente */
+  #pomodal{position:fixed;inset:0;z-index:120;background:rgba(7,10,16,.96);display:none;align-items:center;justify-content:center;padding:24px}
+  #pomodal.show{display:flex}
+  .pochoose{display:flex!important;align-items:center;gap:14px;text-align:left;background:rgba(255,255,255,.06)!important;
+    border:1px solid rgba(255,255,255,.12)!important;color:#fff!important;font-size:18px;padding:14px 16px!important}
+  .pochoose img{height:54px;width:auto;border-radius:8px;flex:0 0 auto}
   /* Botón principal en modo "reiniciar": rojo legible con texto blanco */
   #prim .btn.primary.danger{background:linear-gradient(135deg,#ff8f7e,#e8554d)!important;color:#fff!important;
     border:none!important;box-shadow:0 12px 32px rgba(232,85,77,.42)}
@@ -161,6 +168,16 @@
   <div id="cfgnote"></div>
 </div>
 <div id="dock"><div id="prim"></div></div>
+
+<div id="pomodal" onclick="if(event.target===this)cerrarPo()">
+  <div class="exitcard">
+    <div class="exittitle">🎤 Elegir médico ponente</div>
+    <div class="exitmsg">¿Quién presenta y arbitra el partido?</div>
+    <button class="btn pochoose" onclick="elegirPonente('villar')"><img src="../assets/arbitro-villar.png" alt=""><span>Dra. Alicia Villar</span></button>
+    <button class="btn pochoose" onclick="elegirPonente('cerda')"><img src="../assets/arbitro-cerda.png" alt=""><span>Dr. Eduardo Cerda</span></button>
+    <button class="btn ghost mini" onclick="cerrarPo()">Cancelar</button>
+  </div>
+</div>
 
 <div id="exitmodal" onclick="if(event.target===this)cerrarExit()">
   <div class="exitcard">
@@ -287,6 +304,9 @@ function revelar(){
   });
 }
 
+function abrirElegirPonente(){ document.getElementById("pomodal").classList.add("show"); }
+function cerrarPo(){ document.getElementById("pomodal").classList.remove("show"); }
+function elegirPonente(p){ if(ready) db.ref("evento").update({ ponente:p, presentacion:null }); cerrarPo(); }
 let rosterOpen = false, overlaysOpen = false;
 let ensayo = (typeof localStorage!=="undefined" && localStorage.getItem("pe_ensayo")==="1");
 function toggleEnsayo(){
@@ -495,16 +515,20 @@ function render(){
   const prim=document.getElementById("prim"); prim.innerHTML="";
   function add(label, fn, cls){ const b=document.createElement("button");
     b.className="btn "+(cls||"ghost mini"); b.textContent=label; b.onclick=fn; a.appendChild(b); return b; }
-  function addP(label, fn, cls){ const b=document.createElement("button");
+  function addP(label, fn, cls, sub){ const b=document.createElement("button");
     b.className="btn primary"+(cls?(" "+cls):"");
     const eb=document.createElement("span"); eb.className="pstep"; eb.textContent="SIGUIENTE PASO";
     const ds=document.createElement("span"); ds.className="pdesc"; ds.textContent=label;
     b.appendChild(eb); b.appendChild(ds);
+    if(sub){ const sb=document.createElement("span"); sb.className="psub"; sb.textContent=sub; b.appendChild(sb); }
     b.onclick=fn; prim.appendChild(b); return b; }
 
   // ===== BOTÓN PRINCIPAL (dock fijo abajo) ===== (.go = verde "avanzar")
   switch(EV.estado){
-    case "lobby":      addP("▶️ Iniciar", ()=>{ if(!EV.ponente && !confirm("No has elegido árbitro. ¿Iniciar de todos modos?")) return; setEstado("presentacion",{caso_actual:1, modo:null, penal:null}); }, "go"); break;
+    case "lobby":
+      if(!EV.ponente) addP("👤 Elegir médico ponente (árbitro)", abrirElegirPonente, "go");
+      else addP("▶️ Iniciar", ()=>setEstado("presentacion",{caso_actual:1, modo:null, penal:null}), "go", "🎬 Video de presentación del ponente");
+      break;
     case "presentacion": addP("Contexto Caso 1 →", ()=>setEstado("contexto",{ctx_slide:0}), "go"); break;
     case "contexto":   addP("Mostrar cortinilla pregunta "+numPregunta(EV.caso_actual||1, EV.ponente)+" →", ()=>setEstado("cortinilla"), "go"); break;
     case "cortinilla": addP("Mostrar pregunta "+numPregunta(EV.caso_actual||1, EV.ponente)+" →", ()=>setEstado("pregunta"), "go"); break;
@@ -536,11 +560,6 @@ function render(){
   if(EV.estado==="var"){ const vm=varMediaPonente(preg(), EV.ponente); if(vm.length>1) navSlides("var_slide", vm.length); }
 
   // ===== CONTROLES SECUNDARIOS (cuerpo, con scroll) =====
-  // Selección de árbitro (solo en lobby sin árbitro)
-  if(EV.estado==="lobby" && !EV.ponente){
-    add("👤 Elegir árbitro: Dra. Villar", ()=>db.ref("evento/ponente").set("villar"), "ghost");
-    add("👤 Elegir árbitro: Dr. Cerda", ()=>db.ref("evento/ponente").set("cerda"), "ghost");
-  }
   // Ver contexto a demanda durante las preguntas
   const ncx = contextoPonente(casoClinico(), EV.ponente).length;
   if(!enPenales() && ncx && ["cortinilla","pregunta","opciones","responder","bloqueo","resultado","var"].includes(EV.estado)){
@@ -552,7 +571,7 @@ function render(){
   }
   // Cambiar árbitro (lobby con árbitro)
   if(EV.estado==="lobby" && EV.ponente){
-    add("🔁 Cambiar árbitro", ()=>{ db.ref("evento/presentacion").set(null); db.ref("evento/ponente").set(null); }, "ghost mini");
+    add("🔁 Cambiar médico ponente", abrirElegirPonente, "ghost mini");
   }
   // TERMINAR PARTIDO — visible durante el juego (cierra con el marcador actual)
   if(!["lobby","presentacion","finpartido","final","despedida","marcadorfinal"].includes(EV.estado)){
