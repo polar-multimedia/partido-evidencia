@@ -56,6 +56,10 @@
   #prim .btn.primary .pstep{font-size:14px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;opacity:.78}
   #prim .btn.primary .pdesc{font-size:24px;font-weight:900;line-height:1.15}
   #prim .btn.primary .psub{font-size:14px;font-weight:700;opacity:.72;margin-top:3px}
+  #prim .btn.primary.wait{background:rgba(255,255,255,.10)!important;color:#cfd8e3!important;
+    border:1px solid rgba(255,255,255,.14)!important;box-shadow:none;cursor:default}
+  #prim .btn.primary.wait .pstep{opacity:.6}
+  #prim .btn.primary.wait:active{transform:none}
   /* Modal elegir ponente */
   #pomodal{position:fixed;inset:0;z-index:120;background:rgba(7,10,16,.96);display:none;align-items:center;justify-content:center;padding:24px}
   #pomodal.show{display:flex}
@@ -307,7 +311,7 @@ function revelar(){
 function abrirElegirPonente(){ document.getElementById("pomodal").classList.add("show"); }
 function cerrarPo(){ document.getElementById("pomodal").classList.remove("show"); }
 function elegirPonente(p){ if(ready) db.ref("evento").update({ ponente:p, presentacion:null }); cerrarPo(); }
-let rosterOpen = false, overlaysOpen = false;
+let rosterOpen = false, overlaysOpen = false, respTimer = null;
 let ensayo = (typeof localStorage!=="undefined" && localStorage.getItem("pe_ensayo")==="1");
 function toggleEnsayo(){
   if(!ensayo){ // ENCENDER
@@ -502,6 +506,14 @@ function render(){
   document.getElementById("nRap").textContent = jugN("rapido");
   document.getElementById("nCon").textContent = jugN("control");
 
+  // Auto-cierre del cronómetro (sin botón): al llegar a 0 pasa a bloqueo (silbato)
+  if(EV.estado==="responder"){
+    if(!respTimer) respTimer=setInterval(()=>{
+      if(EV.estado!=="responder"){ clearInterval(respTimer); respTimer=null; return; }
+      if(segRestantes(EV.cronometro)<=0){ cerrarTiempo(); }
+    }, 300);
+  } else if(respTimer){ clearInterval(respTimer); respTimer=null; }
+
   // Mini-timeline (progreso) + panel de saltos (modo ensayo)
   const _actos=listaActos(), _idx=_actos.findIndex(x=>x.k===actoActualKey());
   document.getElementById("flowfill").style.width = (_idx<0?0:Math.round((_idx+1)/_actos.length*100))+"%";
@@ -534,7 +546,7 @@ function render(){
     case "cortinilla": addP("Mostrar pregunta "+numPregunta(EV.caso_actual||1, EV.ponente)+" →", ()=>setEstado("pregunta"), "go"); break;
     case "pregunta":   addP("Mostrar opciones →", ()=>setEstado("opciones"), "go"); break;
     case "opciones":   addP("⏱ Iniciar cronómetro", abrirRespuestas); break;
-    case "responder":  addP("Cerrar tiempo (silbato)", cerrarTiempo); break;
+    case "responder":  addP("⏱ Respondiendo… (el tiempo cierra solo)", null, "wait"); break;
     case "bloqueo":    addP("Revelar resultado ⚽", revelar, "go"); break;
     case "resultado":
       if(enPenales()) addP((EV.penal||1)>=PENALES.length ? "🏆 Ver ganador →" : "Siguiente penal →", siguiente, "go");
